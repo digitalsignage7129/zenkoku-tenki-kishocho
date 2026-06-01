@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>天気サイネージ（通常版）</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: "Hiragino Kaku Gothic StdN", "Meiryo", sans-serif;
+            font-weight: bold;
+            padding: 20px;
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid #ffffff;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .title-group { display: flex; gap: 20px; align-items: baseline; }
+        .date { font-size: 48px; }
+        .name { font-size: 54px; color: #ffff00; }
+        .temp-display { font-size: 64px; color: #00ffcc; font-family: Impact, sans-serif; }
+
+        .forecast-grid {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 160px);
+        }
+        .day-card {
+            flex: 1;
+            background: #111111;
+            border: 2px solid #333333;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px 10px;
+        }
+        .card-label { font-size: 40px; color: #ffffff; }
+        .card-icon { font-size: 110px; line-height: 1; }
+        .card-pop { font-size: 70px; color: #ffff00; font-family: monospace; }
+        
+        .credit {
+            position: absolute;
+            bottom: 5px;
+            right: 15px;
+            font-size: 14px;
+            color: #888888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="title-group">
+            <span class="date" id="dateText">--/--</span>
+            <span class="name" id="backName">大阪</span>
+        </div>
+        <div>
+            <span style="font-size:24px; color:#aaa; vertical-align:middle;">現在気温 </span>
+            <span class="temp-display" id="liveTemp">--.-°C</span>
+        </div>
+    </div>
+
+    <div class="forecast-grid">
+        <div class="day-card">
+            <span class="card-label">今日</span>
+            <span class="card-icon" id="iconToday">☀</span>
+            <span class="card-pop" id="popToday">--%</span>
+        </div>
+        <div class="day-card">
+            <span class="card-label">明日</span>
+            <span class="card-icon" id="iconTom">☁</span>
+            <span class="card-pop" id="popTom">--%</span>
+        </div>
+        <div class="day-card">
+            <span class="card-label">明後日</span>
+            <span class="card-icon" id="iconAftTom">☔</span>
+            <span class="card-pop" id="popAftTom">--%</span>
+        </div>
+    </div>
+
+    <div class="credit">データ元: 気象庁</div>
+
+    <script>
+        // パラメータ解析
+        const params = new URLSearchParams(window.location.search);
+        const areaCode = params.get('area') || '270000';
+        const amedasCode = params.get('amedas') || '62078';
+        const areaName = params.get('name') || '大阪府';
+
+        document.getElementById('backName').innerText = areaName;
+
+        function getWeatherEmoji(code) {
+            const c = parseInt(code);
+            if (c >= 100 && c < 200) return '☀';
+            if (c >= 200 && c < 300) return '☁';
+            if (c >= 300 && c < 400) return '☔';
+            return '☁';
+        }
+
+        async function init() {
+            // 日付表示
+            const now = new Date();
+            document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
+
+            // 1. 府県予報データ
+            try {
+                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
+                const data = await res.json();
+                
+                const fSeries = data[0].timeSeries[0].areas[0];
+                document.getElementById('iconToday').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                document.getElementById('iconTom').innerText = getWeatherEmoji(fSeries.weatherCodes[1]);
+
+                const popSeries = data[0].timeSeries[1].areas[0];
+                document.getElementById('popToday').innerText = popSeries.pops[popSeries.pops.length - 1] + '%';
+                document.getElementById('popTom').innerText = popSeries.pops[popSeries.pops.length - 2] + '%';
+
+                // 明後日
+                const weekSeries = data[1].timeSeries[0].areas[0];
+                document.getElementById('iconAftTom').innerText = getWeatherEmoji(weekSeries.weatherCodes[1]);
+                document.getElementById('popAftTom').innerText = data[1].timeSeries[1].areas[0].pops[1] + '%';
+            } catch(e) { console.error("Forecast Error", e); }
+
+            // 2. アメダス現在気温
+            try {
+                const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
+                const lTime = (await tRes.text()).trim();
+                const amedasRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${lTime.substring(0,8)}_${lTime.substring(8,10)}.json`);
+                const amedasData = await amedasRes.json();
+                const tKey = `${lTime}00`;
+                if(amedasData[tKey]) {
+                    document.getElementById('liveTemp').innerText = amedasData[tKey].temp[0].toFixed(1) + '°C';
+                }
+            } catch(e) { console.error("Amedas Error", e); }
+        }
+
+        init();
+    </script>
+</body>
+</html>
