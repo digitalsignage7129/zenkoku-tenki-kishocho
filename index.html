@@ -1,101 +1,259 @@
-<!DOCTYPE html>
+weather.html?area=130000&amedas=44132&name=%E6%9D%B1%E4%BA%AC%E9%83%BD:205  GET https://www.jma.go.jp/bosai/amedas/data/point/44132/20260601_02.json 404 (Not Found)
+initSystem @ weather.html?area=130000&amedas=44132&name=%E6%9D%B1%E4%BA%AC%E9%83%BD:205
+await in initSystem
+(anonymous) @ weather.html?area=130000&amedas=44132&name=%E6%9D%B1%E4%BA%AC%E9%83%BD:248
+weather.html?area=130000&amedas=44132&name=%E6%9D%B1%E4%BA%AC%E9%83%BD:227  GET https://www.jma.go.jp/bosai/amedas/data/point/44132/20260601_01.json 404 (Not Found)
+initSystem @ weather.html?area=130000&amedas=44132&name=%E6%9D%B1%E4%BA%AC%E9%83%BD:227
+await in initSystem
+(anonymous) @ weather.htm<!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天気サイネージ・コントロールセンター</title>
+    <title>WEATHER BOARD STANDARD</title>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", sans-serif; padding: 30px 15px; max-width: 700px; margin: 0 auto; }
-        h1 { text-align: center; color: #00ffcc; font-size: 1.6rem; margin-bottom: 25px; }
-        .control-panel { background: #1e1e1e; padding: 25px; border-radius: 12px; border: 1px solid #333; }
-        label { display: block; margin-bottom: 10px; font-weight: bold; color: #ffffff; }
-        select { width: 100%; padding: 14px; font-size: 16px; border-radius: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; margin-bottom: 25px; cursor: pointer; }
-        .btn-container { display: flex; gap: 15px; }
-        button { flex: 1; padding: 18px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
-        .btn-main { background: #00ffcc; color: #000; }
-        .btn-mini { background: #ffff00; color: #000; }
-        .note { margin-top: 15px; font-size: 12px; color: #888; text-align: center; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: "Hiragino Kaku Gothic StdN", "Meiryo", Arial, sans-serif;
+            font-weight: bold;
+            padding: 25px;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 5px solid #ffffff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .title-group { display: flex; flex-direction: column; gap: 2px; }
+        .title-top { display: flex; gap: 30px; align-items: baseline; }
+        .date { font-size: 50px; font-family: monospace; }
+        .name { font-size: 55px; color: #ffffff; font-weight: 900; }
+        .credit-tag { font-size: 14px; color: #aaaaaa; font-weight: normal; margin-top: 2px; }
+        
+        .temp-container { text-align: right; }
+        .temp-area { font-size: 28px; color: #aaaaaa; vertical-align: middle; }
+        .temp-display { font-size: 75px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; vertical-align: middle; }
+
+        .forecast-grid { display: flex; gap: 25px; height: calc(100vh - 180px); }
+        .day-card {
+            flex: 1;
+            background: #000000;
+            border: 4px solid #ffffff;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px 10px;
+        }
+        .card-label { font-size: 45px; color: #ffffff; font-weight: 900; border-bottom: 2px solid #555; width: 80%; text-align: center; padding-bottom: 5px;}
+        
+        .today-timeline { width: 100%; height: 80%; display: flex; flex-direction: column; justify-content: space-between; }
+        .today-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 25px; }
+        .row-label { font-size: 32px; color: #ffffff; width: 80px; }
+        .row-icon { font-size: 70px; }
+        .row-pop { font-size: 65px; color: #ffff00; font-family: "Impact", sans-serif; }
+
+        .card-icon { font-size: 150px; line-height: 1; }
+        .card-pop { font-size: 90px; color: #ffff00; font-family: "Impact", sans-serif; }
     </style>
 </head>
 <body>
-    <h1>LED天気サイネージ 配信管理パネル</h1>
-    <div class="control-panel">
-        <label for="areaSelect">▼ 対象の府県予報区・地域を選択してください</label>
-        <select id="areaSelect">
-            <option value="011000" data-amedas="11061">北海道 宗谷地方 (稚内)</option>
-            <option value="012000" data-amedas="14121">北海道 上川・留萌地方 (旭川)</option>
-            <option value="013000" data-amedas="17231">北海道 網走・北見・紋別地方 (網走)</option>
-            <option value="014100" data-amedas="19422">北海道 釧路・根室地方 (釧路)</option>
-            <option value="014000" data-amedas="20182">北海道 十勝地方 (帯広)</option>
-            <option value="015000" data-amedas="23166">北海道 胆振・日高地方 (室蘭)</option>
-            <option value="016000" data-amedas="14163">北海道 石狩・空知・後志地方 (札幌)</option>
-            <option value="017000" data-amedas="26106">北海道 渡島・檜山地方 (函館)</option>
-            <option value="020000" data-amedas="31151">青森県 (青森)</option>
-            <option value="030000" data-amedas="33421">岩手県 (盛岡)</option>
-            <option value="040000" data-amedas="34392">宮城県 (仙台)</option>
-            <option value="050000" data-amedas="32012">秋田県 (秋田)</option>
-            <option value="060000" data-amedas="35426">山形県 (山形)</option>
-            <option value="070000" data-amedas="36462">福島県 (福島)</option>
-            <option value="080000" data-amedas="40211">茨城県 (水戸)</option>
-            <option value="090000" data-amedas="41277">栃木県 (宇都宮)</option>
-            <option value="100000" data-amedas="42321">群馬県 (前橋)</option>
-            <option value="110000" data-amedas="43056">埼玉県 (熊谷)</option>
-            <option value="120000" data-amedas="45212">千葉県 (千葉)</option>
-            <option value="130000" data-amedas="44132" selected>東京都 (東京)</option>
-            <option value="140000" data-amedas="46141">神奈川県 (横浜)</option>
-            <option value="150000" data-amedas="54232">新潟県 (新潟)</option>
-            <option value="160000" data-amedas="55102">富山県 (富山)</option>
-            <option value="170000" data-amedas="56227">石川県 (金沢)</option>
-            <option value="180000" data-amedas="57066">福井県 (福井)</option>
-            <option value="190000" data-amedas="49142">山梨県 (甲府)</option>
-            <option value="200000" data-amedas="48156">長野県 (長野)</option>
-            <option value="210000" data-amedas="52146">岐阜県 (岐阜)</option>
-            <option value="220000" data-amedas="50331">静岡県 (静岡)</option>
-            <option value="230000" data-amedas="51106">愛知県 (名古屋)</option>
-            <option value="240000" data-amedas="53127">三重県 (津)</option>
-            <option value="250000" data-amedas="60131">滋賀県 (大津)</option>
-            <option value="260000" data-amedas="61286">京都府 (京都)</option>
-            <option value="270000" data-amedas="62078">大阪府 (大阪)</option>
-            <option value="280000" data-amedas="63351">兵庫県 (神戸)</option>
-            <option value="290000" data-amedas="64056">奈良県 (奈良)</option>
-            <option value="300000" data-amedas="65042">和歌山県 (和歌山)</option>
-            <option value="310000" data-amedas="69117">鳥取県 (鳥取)</option>
-            <option value="320000" data-amedas="68132">島根県 (松江)</option>
-            <option value="330000" data-amedas="66281">岡山県 (岡山)</option>
-            <option value="340000" data-amedas="67437">広島県 (広島)</option>
-            <option value="350000" data-amedas="81151">山口県 (山口)</option>
-            <option value="360000" data-amedas="71141">徳島県 (徳島)</option>
-            <option value="370000" data-amedas="72061">香川県 (高松)</option>
-            <option value="380000" data-amedas="73141">愛媛県 (松山)</option>
-            <option value="390000" data-amedas="74181">高知県 (高知)</option>
-            <option value="400000" data-amedas="82182">福岡県 (福岡)</option>
-            <option value="410000" data-amedas="85142">佐賀県 (佐賀)</option>
-            <option value="420000" data-amedas="84172">長崎県 (長崎)</option>
-            <option value="430000" data-amedas="86141">熊本県 (熊本)</option>
-            <option value="440000" data-amedas="83411">大分県 (大分)</option>
-            <option value="450000" data-amedas="87326">宮崎県 (宮崎)</option>
-            <option value="460100" data-amedas="88936">鹿児島県 薩摩・大隅地方 (鹿児島)</option>
-            <option value="460040" data-amedas="90401">鹿児島県 奄美地方 (名瀬)</option>
-            <option value="471000" data-amedas="91197">沖縄県 本島地方 (那覇)</option>
-            <option value="472000" data-amedas="91316">沖縄県 大東島地方</option>
-            <option value="473000" data-amedas="93016">沖縄県 宮古島地方</option>
-            <option value="474000" data-amedas="94017">沖縄県 八重山地方 (石垣島)</option>
-        </select>
-        <div class="btn-container">
-            <button class="btn-main" onclick="launch('weather.html')">通常版（大）を起動</button>
-            <button class="btn-mini" onclick="launch('mini_weather.html')">ミニ版（小）を起動</button>
+
+    <div class="header">
+        <div class="title-group">
+            <div class="title-top">
+                <span class="date" id="dateText">--/--</span>
+                <span class="name" id="backName">--</span>
+            </div>
+            <span class="credit-tag">データ元: 気象庁</span>
+        </div>
+        <div class="temp-container">
+            <span class="temp-area">現在気温</span><span class="temp-display" id="liveTemp">--.-°C</span>
         </div>
     </div>
-    <div class="note">※起動後、LEDサイネージ用ブラウザの表示サイズに適合します。</div>
+
+    <div class="forecast-grid">
+        <div class="day-card">
+            <span class="card-label">今日</span>
+            <div class="today-timeline">
+                <div class="today-row">
+                    <span class="row-label">午前</span>
+                    <span class="row-icon" id="iconAm">・</span>
+                    <span class="row-pop" id="popAm">--%</span>
+                </div>
+                <div class="today-row">
+                    <span class="row-label">午後</span>
+                    <span class="row-icon" id="iconPm">・</span>
+                    <span class="row-pop" id="popPm">--%</span>
+                </div>
+                <div class="today-row">
+                    <span class="row-label">夜間</span>
+                    <span class="row-icon" id="iconNight">・</span>
+                    <span class="row-pop" id="popNight">--%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="day-card">
+            <span class="card-label">明日</span>
+            <span class="card-icon" id="iconTom">・</span>
+            <span class="card-pop" id="popTom">--%</span>
+        </div>
+        
+        <div class="day-card">
+            <span class="card-label">明後日</span>
+            <span class="card-icon" id="iconAftTom">・</span>
+            <span class="card-pop" id="popAftTom">--%</span>
+        </div>
+    </div>
+
     <script>
-        function launch(targetPage) {
-            const select = document.getElementById('areaSelect');
-            const area = select.value;
-            const amedas = select.options[select.selectedIndex].getAttribute('data-amedas');
-            const rawName = select.options[select.selectedIndex].text;
-            const name = rawName.split(' (')[0].replace('北海道 ', '').replace('県', '').replace('府', '');
-            window.location.href = `${targetPage}?area=${area}&amedas=${amedas}&name=${encodeURIComponent(name)}`;
+        const params = new URLSearchParams(window.location.search);
+        const areaCode = params.get('area') || '130000';
+        const amedasCode = params.get('amedas') || '44132';
+        const areaName = params.get('name') || '東京';
+
+        document.getElementById('backName').innerText = areaName;
+
+        function getWeatherEmoji(code) {
+            const c = parseInt(code);
+            if (c >= 100 && c < 200) return '☀';
+            if (c >= 200 && c < 300) return '☁';
+            if (c >= 300 && c < 400) return '☔';
+            return '☁';
         }
+
+        async function initSystem() {
+            const now = new Date();
+            document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
+
+            // 1. 府県天気予報取得
+            try {
+                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
+                const data = await res.json();
+                
+                const timeSeriesData = data[0].timeSeries;
+                const fSeries = timeSeriesData[0].areas[0];
+                
+                let popAm = '0', popPm = '0', popNight = '0';
+                const popTimes = timeSeriesData[1].timeSeries;
+                const popValues = timeSeriesData[1].areas[0].pops;
+                const todayStr = now.getDate();
+
+                if (popTimes && popValues) {
+                    popTimes.forEach((tStr, idx) => {
+                        const targetDate = new Date(tStr);
+                        if (targetDate.getDate() === todayStr) {
+                            const hr = targetDate.getHours();
+                            if (hr >= 6 && hr < 12)  popAm = popValues[idx];
+                            if (hr >= 12 && hr < 18) popPm = popValues[idx];
+                            if (hr >= 18 && hr < 24) popNight = popValues[idx];
+                        }
+                    });
+                }
+
+                document.getElementById('iconAm').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                document.getElementById('iconPm').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                document.getElementById('iconNight').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                document.getElementById('popAm').innerText = popAm + '%';
+                document.getElementById('popPm').innerText = popPm + '%';
+                document.getElementById('popNight').innerText = popNight + '%';
+
+                document.getElementById('iconTom').innerText = getWeatherEmoji(fSeries.weatherCodes[1]);
+                let tomPops = [];
+                const tomorrowStr = new Date(Date.now() + 86400000).getDate();
+                if (popTimes && popValues) {
+                    popTimes.forEach((tStr, idx) => {
+                        if (new Date(tStr).getDate() === tomorrowStr) {
+                            tomPops.push(parseInt(popValues[idx] || 0));
+                        }
+                    });
+                }
+                document.getElementById('popTom').innerText = (tomPops.length > 0 ? Math.max(...tomPops) : '0') + '%';
+
+                try {
+                    const weekSeries = data[1].timeSeries[0].areas[0];
+                    document.getElementById('iconAftTom').innerText = getWeatherEmoji(weekSeries.weatherCodes[1]);
+                    document.getElementById('popAftTom').innerText = (data[1].timeSeries[1].areas[0].pops[1] || '0') + '%';
+                } catch(e) {
+                    document.getElementById('iconAftTom').innerText = getWeatherEmoji(fSeries.weatherCodes[2] || '200');
+                    document.getElementById('popAftTom').innerText = '0%';
+                }
+            } catch(e) { console.error(e); }
+
+            // 2. アメダス現在気温取得（12時間制ファイル名ルール対応版）
+            try {
+                const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
+                const rawTime = (await tRes.text()).trim(); 
+                const cleanTime = rawTime.replace(/\D/g, '');
+                
+                const year  = cleanTime.substring(0, 4);
+                const month = cleanTime.substring(4, 6);
+                const day   = cleanTime.substring(6, 8);
+                const hour24 = parseInt(cleanTime.substring(8, 10)); // 24時間制の時(数値)
+
+                // 気象庁アメダス仕様：午後（13時〜23時）であってもファイル名は12時間制（01〜11）になるルールを適用
+                const hour12 = hour24 % 12;
+                const hour = String(hour12).padStart(2, '0'); // "00" 〜 "11" に強制変換
+                
+                const urlDateStr = `${year}${month}${day}`;
+                let amedasData = null;
+                let finalTemp = null;
+
+                // 最新時間の12時間制ファイルをリクエスト
+                try {
+                    const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${hour}.json`;
+                    const amedasRes = await fetch(targetUrl);
+                    if (amedasRes.ok) amedasData = await amedasRes.json();
+                } catch(err) { console.log("最新ファイル未生成のため前時を参照します"); }
+
+                if (amedasData) {
+                    const keys = Object.keys(amedasData).sort();
+                    for (let i = keys.length - 1; i >= 0; i--) {
+                        if (amedasData[keys[i]].temp && amedasData[keys[i]].temp[0] !== null) {
+                            finalTemp = amedasData[keys[i]].temp[0];
+                            break;
+                        }
+                    }
+                }
+
+                // 最新ファイルがない、またはデータがない場合は1時間前をリクエスト
+                if (finalTemp === null) {
+                    try {
+                        const prevHour24 = (hour24 - 1 + 24) % 24;
+                        const prevHour12 = prevHour24 % 12;
+                        const prevHour = String(prevHour12).padStart(2, '0');
+                        
+                        const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${prevHour}.json`;
+                        const resFb = await fetch(fallbackUrl);
+                        if (resFb.ok) {
+                            const fbJson = await resFb.json();
+                            const keys = Object.keys(fbJson).sort();
+                            for (let i = keys.length - 1; i >= 0; i--) {
+                                if (fbJson[keys[i]].temp && fbJson[keys[i]].temp[0] !== null) {
+                                    finalTemp = fbJson[keys[i]].temp[0];
+                                    break;
+                                }
+                            }
+                        }
+                    } catch(err) { console.error("前時ファイル取得エラー:", err); }
+                }
+
+                document.getElementById('liveTemp').innerText = finalTemp !== null ? finalTemp.toFixed(1) + '°C' : "--.-°C";
+            } catch(e) { 
+                console.error(e); 
+                document.getElementById('liveTemp').innerText = "--.-°C";
+            }
+        }
+
+        initSystem();
+        setInterval(initSystem, 120000);
     </script>
 </body>
-</html>
+</html>l?area=130000&amedas=44132&name=%E6%9D%B1%E4%BA%AC%E9%83%BD:248
