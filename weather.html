@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>WEATHER MAP SIGNAGE PERFECT NO-BUG</title>
+    <title>WEATHER MAP SIGNAGE PERFECT VISIBILITY</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -17,7 +17,7 @@
             height: 100vh;
         }
         
-        /* 固定ヘッダー */
+        /* ヘッダー */
         .header {
             display: flex;
             justify-content: space-between;
@@ -46,7 +46,7 @@
         .temp-area { font-size: 35px; color: #ffffff; background: #333333; padding: 4px 12px; border-radius: 8px; }
         .temp-display { font-size: 110px; color: #00ffcc; font-family: 'Arial Black', sans-serif; line-height: 0.9; }
 
-        /* 地図表示エリア */
+        /* 地図エリア */
         .map-viewport {
             position: relative;
             width: 100%;
@@ -65,22 +65,22 @@
             background: #000000 !important;
         }
 
-        /* 予報カード：1枚目を再現したテレビ風デザイン */
+        /* 予報カード：サイズを縦横少しスリムにして、重なりを完全に回避 */
         .leaflet-marker-icon { background: none; border: none; }
         .map-pin-card {
             background: #ffffff;
             border: 3px solid #b5b5b5;
-            border-radius: 14px;
-            width: 160px;
+            border-radius: 12px;
+            width: 130px; /* 160pxから130pxにコンパクト化 */
             padding: 4px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
             text-align: center;
         }
         .pin-name {
-            font-size: 26px;
+            font-size: 22px;
             color: #111111;
             width: 100%;
             text-align: center;
@@ -92,7 +92,7 @@
             color: #ffffff;
             border-radius: 6px;
             text-align: center;
-            font-size: 60px;
+            font-size: 45px;
             line-height: 1.1;
             margin: 2px 0;
         }
@@ -100,10 +100,10 @@
         .bg-cloudy { background: #888888; }
         .bg-rainy { background: #0066cc; }
 
-        .pin-temps { font-size: 26px; font-family: "Arial", sans-serif; font-weight: 900; margin-top: 2px; color: #333333; }
+        .pin-temps { font-size: 22px; font-family: "Arial", sans-serif; font-weight: 900; margin-top: 2px; color: #333333; }
         .max { color: #ff2222; }
         .min { color: #1177ff; }
-        .pin-pop { font-size: 28px; color: #111111; font-weight: 900; margin-top: 1px; }
+        .pin-pop { font-size: 24px; color: #111111; font-weight: 900; margin-top: 1px; }
     </style>
 </head>
 <body>
@@ -112,20 +112,20 @@
         <div class="header-left">
             <span class="date" id="dateText">--/--</span>
             <select class="pref-selector" id="prefSelect" onchange="changePrefecture()">
-                <option value="130000,44132,35.6895,139.6917,10">東京都</option>
-                <option value="270000,62078,34.6863,135.5200,10">大阪府</option>
-                <option value="020000,31151,40.8244,140.7471,9">青森県</option>
-                <option value="016000,14163,43.0642,141.3468,9">北海道</option>
-                <option value="040000,34392,38.2682,140.8694,9">宮城県</option>
-                <option value="110000,43056,35.8570,139.6489,10">埼玉県</option>
-                <option value="120000,45212,35.6051,140.1233,10">千葉県</option>
-                <option value="140000,46106,35.4478,139.6425,10">神奈川県</option>
-                <option value="230000,51106,35.1803,136.9067,10">愛知県</option>
-                <option value="260000,61236,35.0210,135.7556,10">京都府</option>
-                <option value="280000,63411,34.6913,135.1830,10">兵庫県</option>
-                <option value="340000,67416,34.3966,132.4596,10">広島県</option>
-                <option value="400000,82182,33.6064,130.4181,10">福岡県</option>
-                <option value="471000,91197,26.2125,127.6809,10">沖縄県</option>
+                <option value="130000,44132,35.6895,139.5000,9">東京都</option>
+                <option value="270000,62078,34.5500,135.5500,9">大阪府</option>
+                <option value="020000,31151,40.7500,140.8500,8">青森県</option>
+                <option value="016000,14163,43.4000,142.3000,7">北海道</option>
+                <option value="040000,34392,38.4000,140.9000,8">宮城県</option>
+                <option value="110000,43056,36.0000,139.3000,9">埼玉県</option>
+                <option value="120000,45212,35.4500,140.2000,9">千葉県</option>
+                <option value="140000,46106,35.3500,139.3000,9">神奈川県</option>
+                <option value="230000,51106,35.0000,137.1000,9">愛知県</option>
+                <option value="260000,61236,35.1500,135.4500,9">京都府</option>
+                <option value="280000,63411,35.0000,134.8000,9">兵庫県</option>
+                <option value="340000,67416,34.6000,132.8000,8">広島県</option>
+                <option value="400000,82182,33.5000,130.7000,9">福岡県</option>
+                <option value="471000,91197,26.4000,127.9000,9">沖縄県</option>
             </select>
         </div>
         <div class="header-right">
@@ -144,12 +144,13 @@
         let currentArea = params.get('area') || '130000';
         let currentAmedas = params.get('amedas') || '44132';
 
+        // 【位置微調整】カードが重ならないように、緯度・経度の数値を絶妙に離しました
         const regionalCoordinates = {
-            "130000": [{ name: "東京", lat: 35.66, lon: 139.75 }, { name: "大島", lat: 34.75, lon: 139.36 }, { name: "八丈島", lat: 33.11, lon: 139.79 }],
-            "270000": [{ name: "大阪", lat: 34.69, lon: 135.50 }, { name: "堺", lat: 34.54, lon: 135.48 }],
-            "020000": [{ name: "青森", lat: 40.82, lon: 140.75 }, { name: "むつ", lat: 41.29, lon: 141.21 }, { name: "八戸", lat: 40.51, lon: 141.48 }],
+            "130000": [{ name: "東京", lat: 35.68, lon: 139.75 }, { name: "大島", lat: 34.75, lon: 139.36 }, { name: "八丈島", lat: 33.11, lon: 139.79 }],
+            "270000": [{ name: "大阪", lat: 34.72, lon: 135.51 }, { name: "堺", lat: 34.48, lon: 135.43 }],
+            "020000": [{ name: "青森", lat: 40.82, lon: 140.74 }, { name: "むつ", lat: 41.28, lon: 141.21 }, { name: "八戸", lat: 40.51, lon: 141.48 }],
             "016000": [{ name: "札幌", lat: 43.06, lon: 141.35 }, { name: "旭川", lat: 43.77, lon: 142.35 }],
-            "140000": [{ name: "横浜", lat: 35.44, lon: 139.64 }, { name: "小田原", lat: 35.25, lon: 139.15 }],
+            "140000": [{ name: "横浜", lat: 35.44, lon: 139.64 }, { name: "小田原", lat: 35.21, lon: 139.15 }],
             "230000": [{ name: "名古屋", lat: 35.18, lon: 136.90 }],
             "400000": [{ name: "福岡", lat: 33.60, lon: 130.41 }, { name: "北九州", lat: 33.88, lon: 130.88 }],
             "471000": [{ name: "那覇", lat: 26.21, lon: 127.68 }]
@@ -182,7 +183,7 @@
 
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lon], zoom);
 
-            // 【絶対解決】文字なし・道路なしの美しいダークモード専用お天気用マップタイル
+            // 4枚目で成功した、文字なし・道路なしの渋いダークモード背景をそのまま採用
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
                 maxZoom: 12, minZoom: 5
             }).addTo(map);
@@ -204,7 +205,7 @@
 
                 const config = regionalCoordinates[currentArea] || areas.map((a, i) => {
                     const center = map.getCenter();
-                    return { name: a.area.name, lat: center.lat + (i * 0.1), lon: center.lng + (i * 0.1) };
+                    return { name: a.area.name, lat: center.lat + (i * 0.2), lon: center.lng + (i * 0.2) };
                 });
 
                 config.forEach((pos) => {
@@ -226,12 +227,12 @@
                         </div>
                     `;
 
-                    const customIcon = L.divIcon({ html: customHtml, iconSize: [160, 140], iconAnchor: [80, 70] });
+                    const customIcon = L.divIcon({ html: customHtml, iconSize: [130, 120], iconAnchor: [65, 60] });
                     L.marker([pos.lat, pos.lon], { icon: customIcon }).addTo(map);
                 });
             } catch(e) { console.error(e); }
 
-            // アメダス最新気温
+            // アメダス最新気温を取得
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const rawTime = (await tRes.text()).trim().replace(/\D/g, '');
