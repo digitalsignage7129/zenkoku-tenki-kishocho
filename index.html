@@ -5,38 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>天気サイネージ・コントロールセンター</title>
     <style>
-        body {
-            background-color: #121212;
-            color: #e0e0e0;
-            font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", sans-serif;
-            padding: 30px 15px;
-            max-width: 700px;
-            margin: 0 auto;
-        }
+        body { background-color: #121212; color: #e0e0e0; font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", sans-serif; padding: 30px 15px; max-width: 700px; margin: 0 auto; }
         h1 { text-align: center; color: #00ffcc; font-size: 1.6rem; margin-bottom: 25px; }
         .control-panel { background: #1e1e1e; padding: 25px; border-radius: 12px; border: 1px solid #333; }
         label { display: block; margin-bottom: 10px; font-weight: bold; color: #ffffff; }
-        select {
-            width: 100%; padding: 14px; font-size: 16px; border-radius: 8px;
-            background: #2a2a2a; color: #fff; border: 1px solid #444; margin-bottom: 25px;
-            cursor: pointer;
-        }
+        select { width: 100%; padding: 14px; font-size: 16px; border-radius: 8px; background: #2a2a2a; color: #fff; border: 1px solid #444; margin-bottom: 25px; cursor: pointer; }
         .btn-container { display: flex; gap: 15px; }
-        button {
-            flex: 1; padding: 18px; font-size: 1.1rem; font-weight: bold;
-            border-radius: 8px; border: none; cursor: pointer; transition: background 0.2s;
-        }
+        button { flex: 1; padding: 18px; font-size: 1.1rem; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; }
         .btn-main { background: #00ffcc; color: #000; }
-        .btn-main:hover { background: #00ccaa; }
         .btn-mini { background: #ffff00; color: #000; }
-        .btn-mini:hover { background: #dddd00; }
         .note { margin-top: 15px; font-size: 12px; color: #888; text-align: center; }
     </style>
 </head>
 <body>
-
     <h1>LED天気サイネージ 配信管理パネル</h1>
-    
     <div class="control-panel">
         <label for="areaSelect">▼ 対象の府県予報区・地域を選択してください</label>
         <select id="areaSelect">
@@ -92,30 +74,26 @@
             <option value="430000" data-amedas="86141">熊本県 (熊本)</option>
             <option value="440000" data-amedas="83411">大分県 (大分)</option>
             <option value="450000" data-amedas="87326">宮崎県 (宮崎)</option>
-            <option value="460100" data-amedas="88936">鹿児島県 薩摩・大隅・地方 (鹿児島)</option>
+            <option value="460100" data-amedas="88936">鹿児島県 薩摩・大隅地方 (鹿児島)</option>
             <option value="460040" data-amedas="90401">鹿児島県 奄美地方 (名瀬)</option>
             <option value="471000" data-amedas="91197">沖縄県 本島地方 (那覇)</option>
             <option value="472000" data-amedas="91316">沖縄県 大東島地方</option>
             <option value="473000" data-amedas="93016">沖縄県 宮古島地方</option>
             <option value="474000" data-amedas="94017">沖縄県 八重山地方 (石垣島)</option>
         </select>
-
         <div class="btn-container">
             <button class="btn-main" onclick="launch('weather.html')">通常版（大）を起動</button>
             <button class="btn-mini" onclick="launch('mini_weather.html')">ミニ版（小）を起動</button>
         </div>
     </div>
     <div class="note">※起動後、LEDサイネージ用ブラウザの表示サイズに適合します。</div>
-
     <script>
         function launch(targetPage) {
             const select = document.getElementById('areaSelect');
             const area = select.value;
             const amedas = select.options[select.selectedIndex].getAttribute('data-amedas');
-            // 表示用の地名を抽出
             const rawName = select.options[select.selectedIndex].text;
             const name = rawName.split(' (')[0].replace('北海道 ', '').replace('県', '').replace('府', '');
-            
             window.location.href = `${targetPage}?area=${area}&amedas=${amedas}&name=${encodeURIComponent(name)}`;
         }
     </script>
