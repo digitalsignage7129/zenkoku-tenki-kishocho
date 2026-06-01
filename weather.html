@@ -23,51 +23,60 @@
             border-bottom: 6px solid #ffffff;
             padding-bottom: 15px;
             position: relative;
-            z-index: 10; /* 地図より前に出す */
+            z-index: 10;
         }
         .date { font-size: 55px; font-family: monospace; color: #aaaaaa; }
         .name { font-size: 70px; color: #ffffff; font-weight: 900; line-height: 1.1; margin-left: 15px; }
         .temp-area { font-size: 35px; color: #ffffff; background: #333333; padding: 4px 12px; border-radius: 8px; }
         .temp-display { font-size: 110px; color: #00ffcc; font-family: 'Arial Black', sans-serif; line-height: 0.9; margin-left: 15px; }
 
-        /* 地図を配置するベース（画面いっぱいに広げる） */
+        /* 地図表示エリア */
         .map-viewport {
             position: relative;
             width: 100%;
             height: calc(100vh - 200px);
             margin-top: 20px;
-            background: #050505; /* ほんのり明るい黒 */
+            background: #050505;
             border-radius: 20px;
             overflow: hidden;
         }
 
-        /* 背景の簡易地図シルエット（CSSの図形で東京の形をそれっぽく表現、後に自動SVG化） */
-        .map-bg-silhouette {
+        /* 背景のSVG日本地図 */
+        #map-svg {
+            width: 100%;
+            height: 100%;
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            height: 60%;
-            background: linear-gradient(135deg, #112211 0%, #051105 100%); /* 焼き付けない暗い緑 */
-            border: 3px dashed #224422;
-            border-radius: 50% 30% 40% 20%;
-            opacity: 0.7;
+            top: 0;
+            left: 0;
+        }
+        .land {
+            fill: #112211; /* 画面が焼けない暗い緑 */
+            stroke: #224422; /* 境界線 */
+            stroke-width: 0.2;
+        }
+        .active-pref {
+            fill: #1a3a1a; /* 選択された県を少し明るく */
+            stroke: #448844;
+            stroke-width: 0.4;
         }
 
-        /* 送っていただいた画像を再現した「地図上に浮かぶ予報カード」 */
+        /* ピン留め予報カード（半透明・白枠） */
         .map-pin-card {
             position: absolute;
-            background: rgba(17, 17, 17, 0.9); /* 高級感のある半透明の黒 */
+            background: rgba(10, 10, 10, 0.85);
             border: 4px solid #ffffff;
             border-radius: 12px;
-            width: 210px;
+            width: 220px;
             padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
+            transform: translate(-50%, -50%); /* 中心をピン位置に合わせる */
+            transition: all 0.5s ease;
+            opacity: 0; /* データ読み込み前は非表示 */
         }
+        .card-show { opacity: 1; }
 
         .pin-name {
             font-size: 32px;
@@ -79,94 +88,161 @@
             background: #222222;
             border-radius: 6px 6px 0 0;
         }
-
-        .pin-weather {
-            font-size: 75px;
-            line-height: 1;
-            margin: 5px 0;
-        }
-
-        .pin-temps {
-            font-size: 28px;
-            font-family: monospace;
-        }
+        .pin-weather { font-size: 75px; line-height: 1; margin: 5px 0; }
+        .pin-temps { font-size: 28px; font-family: monospace; }
         .max { color: #ff4444; }
         .min { color: #4488ff; }
-
-        .pin-pop {
-            font-size: 35px;
-            color: #ffff00;
-            font-family: "Impact", sans-serif;
-            margin-top: 2px;
-        }
-
-        /* 各地域の位置（東京の地理的配置をシミュレート） */
-        #pin-okutama { top: 15%; left: 10%; }  /* 左上の奥多摩 */
-        #pin-ome     { top: 25%; left: 30%; }  /* 青梅 */
-        #pin-hachioji { top: 55%; left: 25%; }  /* 左下の八王子 */
-        #pin-tachikawa { top: 35%; left: 45%; } /* 中央の立川 */
-        #pin-shinjuku  { top: 40%; left: 68%; } /* 都心近くの新宿 */
-        #pin-tokyo     { top: 45%; left: 83%; } /* 右側の東京 */
+        .pin-pop { font-size: 35px; color: #ffff00; font-family: "Impact", sans-serif; margin-top: 2px; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <span class="date">6/1</span>
-            <span class="name">東京都</span>
+            <span class="date" id="dateText">--/--</span>
+            <span class="name" id="backName">--</span>
         </div>
         <div>
             <span class="temp-area">現在気温</span>
-            <span class="temp-display">26.5°C</span>
+            <span class="temp-display" id="liveTemp">--.-°C</span>
         </div>
     </div>
 
-    <div class="map-viewport">
-        <div class="map-bg-silhouette"></div>
-
-        <div class="map-pin-card" id="pin-okutama">
-            <span class="pin-name">奥多摩</span>
-            <span class="pin-weather">☀</span>
-            <div class="pin-temps"><span class="max">30</span>/<span class="min">14</span></div>
-            <span class="pin-pop">20%</span>
-        </div>
-
-        <div class="map-pin-card" id="pin-ome">
-            <span class="pin-name">青梅</span>
-            <span class="pin-weather">☀</span>
-            <div class="pin-temps"><span class="max">32</span>/<span class="min">16</span></div>
-            <span class="pin-pop">20%</span>
-        </div>
-
-        <div class="map-pin-card" id="pin-hachioji">
-            <span class="pin-name">八王子</span>
-            <span class="pin-weather">☀</span>
-            <div class="pin-temps"><span class="max">32</span>/<span class="min">16</span></div>
-            <span class="pin-pop">20%</span>
-        </div>
-
-        <div class="map-pin-card" id="pin-tachikawa">
-            <span class="pin-name">立川</span>
-            <span class="pin-weather">☀</span>
-            <div class="pin-temps"><span class="max">32</span>/<span class="min">17</span></div>
-            <span class="pin-pop">20%</span>
-        </div>
-
-        <div class="map-pin-card" id="pin-shinjuku">
-            <span class="pin-name">新宿</span>
-            <span class="pin-weather">☀</span>
-            <div class="pin-temps"><span class="max">31</span>/<span class="min">19</span></div>
-            <span class="pin-pop">20%</span>
-        </div>
-
-        <div class="map-pin-card" id="pin-tokyo">
-            <span class="pin-name">東京</span>
-            <span class="pin-weather">☀</span>
-            <div class="pin-temps"><span class="max">31</span>/<span class="min">20</span></div>
-            <span class="pin-pop">20%</span>
-        </div>
+    <div class="map-viewport" id="viewport">
+        <svg id="map-svg" viewBox="120 20 35 30">
+            <path class="land" d="M140,35 L141,36 L142,35 L141,34 Z" id="pref-13"></path>
+            </svg>
+        <div id="pin-container"></div>
     </div>
 
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const areaCode = params.get('area') || '130000';
+        const amedasCode = params.get('amedas') || '44132';
+        const areaName = params.get('name') || '東京都';
+
+        document.getElementById('backName').innerText = areaName;
+
+        // 都道府県ごとの主要都市マッピング座標（画面内の％位置）
+        const regionalPositions = {
+            "130000": [ // 東京都の主要部
+                { name: "東京", top: "50%", left: "80%" },
+                { name: "新宿", top: "45%", left: "68%" },
+                { name: "立川", top: "40%", left: "50%" },
+                { name: "八王子", top: "58%", left: "35%" },
+                { name: "奥多摩", top: "25%", left: "15%" }
+            ],
+            "020000": [ // 青森県の主要部
+                { name: "青森", top: "35%", left: "50%" },
+                { name: "弘前", top: "55%", left: "35%" },
+                { name: "八戸", top: "65%", left: "75%" },
+                { name: "むつ", top: "20%", left: "60%" }
+            ]
+        };
+
+        function getWeatherEmoji(code) {
+            const c = parseInt(code);
+            if (c >= 100 && c < 200) return '☀';
+            if (c >= 200 && c < 300) return '☁';
+            if (c >= 300 && c < 400) return '☔';
+            return '☁';
+        }
+
+        async function initSystem() {
+            const now = new Date();
+            document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
+
+            // 1. 県内一括天気予報の取得＆地図マッピング
+            try {
+                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
+                const data = await res.json();
+                
+                const pinContainer = document.getElementById('pin-container');
+                pinContainer.innerHTML = ''; // クリア
+
+                // 選択された地域設定を読み込み
+                const config = regionalPositions[areaCode] || [{ name: areaName, top: "50%", left: "50%" }];
+                
+                // 府県予報から各サブ地域のデータを抽出
+                const areas = data[0].timeSeries[0].areas;
+                const pops = data[0].timeSeries[1] ? data[0].timeSeries[1].areas : [];
+                const temps = data[0].timeSeries[2] ? data[0].timeSeries[2].areas : [];
+
+                config.forEach((pos, index) => {
+                    // 最も名前が近い予報データを検索
+                    const fArea = areas.find(a => a.area.name.includes(pos.name)) || areas[0];
+                    const pArea = pops.find(a => a.area.name.includes(pos.name)) || pops[0];
+                    const tArea = temps.find(a => a.area.name.includes(pos.name)) || temps[0];
+
+                    const weatherIcon = getWeatherEmoji(fArea.weatherCodes[0]);
+                    const popValue = pArea ? (pArea.pops[0] || '0') : '0';
+                    const maxTemp = tArea ? (tArea.temps[0] || '--') : '--';
+                    const minTemp = tArea ? (tArea.temps[1] || '--') : '--';
+
+                    // 画像のデザインを完全再現したカードを動的生成
+                    const card = document.createElement('div');
+                    card.className = 'map-pin-card card-show';
+                    card.style.top = pos.top;
+                    card.style.left = pos.left;
+                    card.innerHTML = `
+                        <span class="pin-name">${pos.name}</span>
+                        <span class="pin-weather">${weatherIcon}</span>
+                        <div class="pin-temps"><span class="max">${maxTemp}</span>/<span class="min">${minTemp}</span></div>
+                        <span class="pin-pop">${popValue}%</span>
+                    `;
+                    pinContainer.appendChild(card);
+                });
+
+            } catch(e) { console.error("予報マップ生成エラー:", e); }
+
+            // 2. アメダス現在気温取得（UTC 3時間区切りバグ完全修正版）
+            try {
+                const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
+                const rawTime = (await tRes.text()).trim(); 
+                const cleanTime = rawTime.replace(/\D/g, '');
+                
+                const year  = cleanTime.substring(0, 4);
+                const month = cleanTime.substring(4, 6);
+                const day   = cleanTime.substring(6, 8);
+                const hour24 = parseInt(cleanTime.substring(8, 10));
+
+                const jstDate = new Date(year, parseInt(month)-1, day, hour24);
+                const utcDate = new Date(jstDate.getTime() - (9 * 60 * 60 * 1000));
+                
+                const utcHour = utcDate.getHours();
+                let fileHour = "00";
+                if (utcHour >= 0 && utcHour <= 2)   fileHour = "03";
+                else if (utcHour >= 3 && utcHour <= 5)   fileHour = "06";
+                else if (utcHour >= 6 && utcHour <= 8)   fileHour = "09";
+                else if (utcHour >= 9 && utcHour <= 11)  fileHour = "12";
+                else if (utcHour >= 12 && utcHour <= 14) fileHour = "15";
+                else if (utcHour >= 15 && utcHour <= 17) fileHour = "18";
+                else if (utcHour >= 18 && utcHour <= 20) fileHour = "21";
+                else if (utcHour >= 21 && utcHour <= 23) fileHour = "00";
+
+                const urlDateStr = `${year}${month}${day}`;
+                const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${fileHour}.json`;
+                
+                const amedasRes = await fetch(targetUrl);
+                if (amedasRes.ok) {
+                    const amedasData = await amedasRes.json();
+                    const keys = Object.keys(amedasData).sort();
+                    let finalTemp = null;
+                    for (let i = keys.length - 1; i >= 0; i--) {
+                        if (amedasData[keys[i]].temp && amedasData[keys[i]].temp[0] !== null) {
+                            finalTemp = amedasData[keys[i]].temp[0];
+                            break;
+                        }
+                    }
+                    if (finalTemp !== null) {
+                        document.getElementById('liveTemp').innerText = finalTemp.toFixed(1) + '°C';
+                    }
+                }
+            } catch(e) { console.error("アメダス取得エラー:", e); }
+        }
+
+        initSystem();
+        setInterval(initSystem, 120000); // 2分毎更新
+    </script>
 </body>
 </html>
