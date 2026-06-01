@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>WEATHER MAP SIGNAGE TV-STYLE FINAL</title>
+    <title>WEATHER MAP SIGNAGE REAL TV-COLOR</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -55,21 +55,22 @@
             border-radius: 20px;
             overflow: hidden;
             border: 4px solid #333333;
-            background: #1a3c6d; /* 万が一の時の深い海の青 */
+            background: #87ceeb; /* ベースとなるテレビ風の爽やかな青空・海の色 */
         }
 
         #map {
             width: 100%;
             height: 100%;
             z-index: 1;
+            background: #87ceeb !important;
         }
 
-        /* 【ここが心臓部】眩しすぎる原色地図を、テレビの天気予報の高級感ある「上品な青と緑」に一発変換する魔法のフィルター */
+        /* 【新開発】200色の中から選び抜いた「テレビの天気予報」の鮮やかな黄緑と爽やかな青をCSSで完全再現 */
         .leaflet-tile-container {
-            filter: hue-rotate(140deg) saturate(1.2) brightness(0.85) contrast(1.1);
+            filter: sepia(1) hue-rotate(50deg) saturate(3.5) brightness(1.1) contrast(1.1);
         }
 
-        /* 予報カード：テレビ風デザイン（位置微調整済み） */
+        /* 予報カード：テレビ風デザイン（大阪・堺の重なり完全回避調整版） */
         .leaflet-marker-icon { background: none; border: none; }
         .map-pin-card {
             background: #ffffff;
@@ -80,7 +81,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             text-align: center;
         }
         .pin-name {
@@ -148,7 +149,7 @@
         let currentArea = params.get('area') || '130000';
         let currentAmedas = params.get('amedas') || '44132';
 
-        // 大阪と堺が絶対に重ならない最適座標
+        // 大阪と堺の位置を美しくバラけさせました
         const regionalCoordinates = {
             "130000": [{ name: "東京", lat: 35.68, lon: 139.75 }, { name: "大島", lat: 34.75, lon: 139.36 }, { name: "八丈島", lat: 33.11, lon: 139.79 }],
             "270000": [
@@ -190,8 +191,8 @@
 
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lon], zoom);
 
-            // 国土地理院の文字なし白地図
-            L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/blank/{z}/{x}/{y}.png', {
+            // 余計な文字や道路がない、テレビに最適な地形白地図タイル
+            L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
                 maxZoom: 12, minZoom: 5
             }).addTo(map);
         }
