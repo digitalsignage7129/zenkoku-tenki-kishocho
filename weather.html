@@ -12,7 +12,6 @@
             font-weight: bold;
             padding: 25px;
             overflow: hidden;
-            position: relative;
             height: 100vh;
         }
         .header {
@@ -20,19 +19,23 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 5px solid #ffffff;
-            padding-bottom: 15px;
+            padding-bottom: 10px;
             margin-bottom: 25px;
         }
-        .title-group { display: flex; gap: 30px; align-items: baseline; }
+        .title-group { display: flex; flex-direction: column; gap: 2px; }
+        .title-top { display: flex; gap: 30px; align-items: baseline; }
         .date { font-size: 50px; font-family: monospace; }
-        .name { font-size: 55px; color: #ffffff; }
-        .temp-area { font-size: 30px; color: #aaaaaa; }
-        .temp-display { font-size: 70px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; }
+        .name { font-size: 55px; color: #ffffff; font-weight: 900; }
+        .credit-tag { font-size: 14px; color: #aaaaaa; font-weight: normal; margin-top: 2px; }
+        
+        .temp-container { text-align: right; }
+        .temp-area { font-size: 28px; color: #aaaaaa; vertical-align: middle; }
+        .temp-display { font-size: 75px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; vertical-align: middle; }
 
         .forecast-grid {
             display: flex;
             gap: 25px;
-            height: calc(100vh - 170px);
+            height: calc(100vh - 180px);
         }
         .day-card {
             flex: 1;
@@ -48,25 +51,20 @@
         .card-label { font-size: 45px; color: #ffffff; font-weight: 900; }
         .card-icon { font-size: 140px; line-height: 1; }
         .card-pop { font-size: 85px; color: #ffff00; font-family: "Impact", sans-serif; }
-        
-        .credit {
-            position: absolute;
-            bottom: 5px;
-            right: 20px;
-            font-size: 12px;
-            color: #444444;
-        }
     </style>
 </head>
 <body>
 
     <div class="header">
         <div class="title-group">
-            <span class="date" id="dateText">--/--</span>
-            <span class="name" id="backName">--</span>
+            <div class="title-top">
+                <span class="date" id="dateText">--/--</span>
+                <span class="name" id="backName">--</span>
+            </div>
+            <span class="credit-tag">データ元: 気象庁</span>
         </div>
-        <div>
-            <span class="temp-area">現在気温<span class="temp-display" id="liveTemp">--.-</span></span>
+        <div class="temp-container">
+            <span class="temp-area">現在気温</span><span class="temp-display" id="liveTemp">--.-°C</span>
         </div>
     </div>
 
@@ -74,21 +72,19 @@
         <div class="day-card">
             <span class="card-label">今日</span>
             <span class="card-icon" id="iconToday">・</span>
-            <span class="card-pop" id="popToday">--</span>
+            <span class="card-pop" id="popToday">--%</span>
         </div>
         <div class="day-card">
             <span class="card-label">明日</span>
             <span class="card-icon" id="iconTom">・</span>
-            <span class="card-pop" id="popTom">--</span>
+            <span class="card-pop" id="popTom">--%</span>
         </div>
         <div class="day-card">
             <span class="card-label">明後日</span>
             <span class="card-icon" id="iconAftTom">・</span>
-            <span class="card-pop" id="popAftTom">--</span>
+            <span class="card-pop" id="popAftTom">--%</span>
         </div>
     </div>
-
-    <div class="credit">データ元: 気象庁</div>
 
     <script>
         const params = new URLSearchParams(window.location.search);
@@ -110,7 +106,7 @@
             const now = new Date();
             document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
 
-            // 1. 府県天気予報データの取得
+            // 1. 府県天気予報
             try {
                 const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
                 const data = await res.json();
@@ -120,11 +116,9 @@
                 document.getElementById('iconTom').innerText = getWeatherEmoji(fSeries.weatherCodes[1]);
 
                 const popSeries = data[0].timeSeries[1].areas[0];
-                // データの安全な取り出し
-                document.getElementById('popToday').innerText = popSeries.pops[0] || '0';
-                document.getElementById('popTom').innerText = popSeries.pops[popSeries.pops.length - 1] || '0';
+                document.getElementById('popToday').innerText = (popSeries.pops[0] || '0');
+                document.getElementById('popTom').innerText = (popSeries.pops[popSeries.pops.length - 1] || '0');
 
-                // 明後日（3日目データエラー対策処理）
                 try {
                     const weekSeries = data[1].timeSeries[0].areas[0];
                     document.getElementById('iconAftTom').innerText = getWeatherEmoji(weekSeries.weatherCodes[1]);
@@ -133,9 +127,9 @@
                     document.getElementById('iconAftTom').innerText = getWeatherEmoji(fSeries.weatherCodes[2] || '200');
                     document.getElementById('popAftTom').innerText = '0';
                 }
-            } catch(e) { console.error("Forecast API Error", e); }
+            } catch(e) { console.error(e); }
 
-            // 2. アメダス現在気温データの取得（遡りサーチ機能付き）
+            // 2. アメダス現在気温（最新キー遡り対応）
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const lTime = (await tRes.text()).trim();
@@ -144,35 +138,37 @@
                 const month = lTime.substring(4, 6);
                 const day = lTime.substring(6, 8);
                 const hour = lTime.substring(8, 10);
+                const minute = lTime.substring(10, 12);
 
                 const amedasRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${hour}.json`);
                 const amedasData = await amedasRes.json();
                 
-                let tKey = `${lTime}00`;
-                let targetData = amedasData[tKey];
+                let pointData = null;
+                let currentTotalMinutes = parseInt(hour) * 60 + parseInt(minute);
 
-                if(!targetData || !targetData.temp) {
-                    const baseMin = parseInt(lTime.substring(10, 12));
-                    for (let i = 10; i <= 30; i += 10) {
-                        let m = baseMin - i;
-                        let h = parseInt(hour);
-                        if(m < 0) { m += 60; h = (h - 1 + 24) % 24; }
-                        let altKey = `${year}${month}${day}${String(h).padStart(2,'0')}${String(m).padStart(2,'0')}00`;
-                        if(amedasData[altKey] && amedasData[altKey].temp) {
-                            targetData = amedasData[altKey];
-                            break;
-                        }
+                for (let i = 0; i < 5; i++) {
+                    let targetTotal = currentTotalMinutes - (i * 10);
+                    if (targetTotal < 0) targetTotal += 1440;
+                    let h = String(Math.floor(targetTotal / 60)).padStart(2, '0');
+                    let m = String(targetTotal % 60).padStart(2, '0');
+                    let testKey = `${year}${month}${day}${h}${m}00`;
+
+                    if (amedasData[testKey] && amedasData[testKey].temp && amedasData[testKey].temp[0] !== null) {
+                        pointData = amedasData[testKey];
+                        break;
                     }
                 }
 
-                if(targetData && targetData.temp) {
-                    document.getElementById('liveTemp').innerText = targetData.temp[0].toFixed(1);
+                if(pointData && pointData.temp) {
+                    document.getElementById('liveTemp').innerText = pointData.temp[0].toFixed(1) + '°C';
+                } else {
+                    document.getElementById('liveTemp').innerText = "--.-°C";
                 }
-            } catch(e) { console.error("Amedas API Error", e); }
+            } catch(e) { console.error(e); }
         }
 
         initSystem();
-        setInterval(initSystem, 600000); // 10分ごとに再ロード
+        setInterval(initSystem, 120000);
     </script>
 </body>
 </html>
