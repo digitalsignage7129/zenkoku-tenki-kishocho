@@ -20,7 +20,7 @@
             align-items: center;
             border-bottom: 5px solid #ffffff;
             padding-bottom: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         .title-group { display: flex; flex-direction: column; gap: 2px; }
         .title-top { display: flex; gap: 30px; align-items: baseline; }
@@ -32,11 +32,8 @@
         .temp-area { font-size: 28px; color: #aaaaaa; vertical-align: middle; }
         .temp-display { font-size: 75px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; vertical-align: middle; }
 
-        .forecast-grid {
-            display: flex;
-            gap: 25px;
-            height: calc(100vh - 180px);
-        }
+        /* レイアウト全体構造 */
+        .forecast-grid { display: flex; gap: 25px; height: calc(100vh - 180px); }
         .day-card {
             flex: 1;
             background: #000000;
@@ -46,11 +43,20 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-around;
-            padding: 30px 10px;
+            padding: 20px 10px;
         }
-        .card-label { font-size: 45px; color: #ffffff; font-weight: 900; }
-        .card-icon { font-size: 140px; line-height: 1; }
-        .card-pop { font-size: 85px; color: #ffff00; font-family: "Impact", sans-serif; }
+        .card-label { font-size: 45px; color: #ffffff; font-weight: 900; border-bottom: 2px solid #555; width: 80%; text-align: center; padding-bottom: 5px;}
+        
+        /* 大サイズ：「今日」の枠内の3時間おきの縦並び構成 */
+        .today-timeline { width: 100%; height: 80%; display: flex; flex-direction: column; justify-content: space-between; }
+        .today-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 25px; }
+        .row-label { font-size: 32px; color: #ffffff; width: 80px; }
+        .row-icon { font-size: 70px; }
+        .row-pop { font-size: 65px; color: #ffff00; font-family: "Impact", sans-serif; }
+
+        /* 「明日」「明後日」の標準大表示用パーツ */
+        .card-icon { font-size: 150px; line-height: 1; }
+        .card-pop { font-size: 90px; color: #ffff00; font-family: "Impact", sans-serif; }
     </style>
 </head>
 <body>
@@ -71,14 +77,31 @@
     <div class="forecast-grid">
         <div class="day-card">
             <span class="card-label">今日</span>
-            <span class="card-icon" id="iconToday">・</span>
-            <span class="card-pop" id="popToday">--%</span>
+            <div class="today-timeline">
+                <div class="today-row">
+                    <span class="row-label">午前</span>
+                    <span class="row-icon" id="iconAm">・</span>
+                    <span class="row-pop" id="popAm">--%</span>
+                </div>
+                <div class="today-row">
+                    <span class="row-label">午後</span>
+                    <span class="row-icon" id="iconPm">・</span>
+                    <span class="row-pop" id="popPm">--%</span>
+                </div>
+                <div class="today-row">
+                    <span class="row-label">夜間</span>
+                    <span class="row-icon" id="iconNight">・</span>
+                    <span class="row-pop" id="popNight">--%</span>
+                </div>
+            </div>
         </div>
+        
         <div class="day-card">
             <span class="card-label">明日</span>
             <span class="card-icon" id="iconTom">・</span>
             <span class="card-pop" id="popTom">--%</span>
         </div>
+        
         <div class="day-card">
             <span class="card-label">明後日</span>
             <span class="card-icon" id="iconAftTom">・</span>
@@ -106,30 +129,65 @@
             const now = new Date();
             document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
 
-            // 1. 府県天気予報
+            // 1. 府県天気予報（今日3連マッピング内包）
             try {
                 const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
                 const data = await res.json();
                 
-                const fSeries = data[0].timeSeries[0].areas[0];
-                document.getElementById('iconToday').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                const timeSeriesData = data[0].timeSeries;
+                const fSeries = timeSeriesData[0].areas[0];
+                
+                // 今日（午前・午後・夜間）の初期値
+                let popAm = '0', popPm = '0', popNight = '0';
+                const popTimes = timeSeriesData[1].timeSeries;
+                const popValues = timeSeriesData[1].areas[0].pops;
+                const todayStr = new Date().getDate();
+
+                if (popTimes && popValues) {
+                    popTimes.forEach((tStr, idx) => {
+                        const targetDate = new Date(tStr);
+                        if (targetDate.getDate() === todayStr) {
+                            const hr = targetDate.getHours();
+                            if (hr >= 6 && hr < 12)  popAm = popValues[idx];
+                            if (hr >= 12 && hr < 18) popPm = popValues[idx];
+                            if (hr >= 18 && hr < 24) popNight = popValues[idx];
+                        }
+                    });
+                }
+
+                // アイコンおよび確率の代入
+                document.getElementById('iconAm').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                document.getElementById('iconPm').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                document.getElementById('iconNight').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
+                document.getElementById('popAm').innerText = popAm + '%';
+                document.getElementById('popPm').innerText = popPm + '%';
+                document.getElementById('popNight').innerText = popNight + '%';
+
+                // 明日
                 document.getElementById('iconTom').innerText = getWeatherEmoji(fSeries.weatherCodes[1]);
+                let tomPops = [];
+                const tomorrowStr = new Date(Date.now() + 86400000).getDate();
+                if (popTimes && popValues) {
+                    popTimes.forEach((tStr, idx) => {
+                        if (new Date(tStr).getDate() === tomorrowStr) {
+                            tomPops.push(parseInt(popValues[idx] || 0));
+                        }
+                    });
+                }
+                document.getElementById('popTom').innerText = (tomPops.length > 0 ? Math.max(...tomPops) : '0') + '%';
 
-                const popSeries = data[0].timeSeries[1].areas[0];
-                document.getElementById('popToday').innerText = (popSeries.pops[0] || '0');
-                document.getElementById('popTom').innerText = (popSeries.pops[popSeries.pops.length - 1] || '0');
-
+                // 明後日
                 try {
                     const weekSeries = data[1].timeSeries[0].areas[0];
                     document.getElementById('iconAftTom').innerText = getWeatherEmoji(weekSeries.weatherCodes[1]);
-                    document.getElementById('popAftTom').innerText = data[1].timeSeries[1].areas[0].pops[1] || '0';
+                    document.getElementById('popAftTom').innerText = (data[1].timeSeries[1].areas[0].pops[1] || '0') + '%';
                 } catch(e) {
                     document.getElementById('iconAftTom').innerText = getWeatherEmoji(fSeries.weatherCodes[2] || '200');
-                    document.getElementById('popAftTom').innerText = '0';
+                    document.getElementById('popAftTom').innerText = '0%';
                 }
             } catch(e) { console.error(e); }
 
-            // 2. アメダス現在気温（最新キー遡り対応）
+            // 2. アメダス現在気温（大サイズ版：バックアップ遡り完全対応）
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const lTime = (await tRes.text()).trim();
@@ -141,21 +199,40 @@
                 const minute = lTime.substring(10, 12);
 
                 const amedasRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${hour}.json`);
-                const amedasData = await amedasRes.json();
+                let amedasData = amedasRes.ok ? await amedasRes.json() : null;
                 
                 let pointData = null;
                 let currentTotalMinutes = parseInt(hour) * 60 + parseInt(minute);
 
-                for (let i = 0; i < 5; i++) {
-                    let targetTotal = currentTotalMinutes - (i * 10);
-                    if (targetTotal < 0) targetTotal += 1440;
-                    let h = String(Math.floor(targetTotal / 60)).padStart(2, '0');
-                    let m = String(targetTotal % 60).padStart(2, '0');
-                    let testKey = `${year}${month}${day}${h}${m}00`;
+                if (amedasData) {
+                    for (let i = 0; i < 5; i++) {
+                        let targetTotal = currentTotalMinutes - (i * 10);
+                        if (targetTotal < 0) break;
+                        let h = String(Math.floor(targetTotal / 60)).padStart(2, '0');
+                        let m = String(targetTotal % 60).padStart(2, '0');
+                        let testKey = `${year}${month}${day}${h}${m}00`;
 
-                    if (amedasData[testKey] && amedasData[testKey].temp && amedasData[testKey].temp[0] !== null) {
-                        pointData = amedasData[testKey];
-                        break;
+                        if (amedasData[testKey] && amedasData[testKey].temp && amedasData[testKey].temp[0] !== null) {
+                            pointData = amedasData[testKey];
+                            break;
+                        }
+                    }
+                }
+
+                // 同一時間帯ファイルになければ前時間のファイルを探索
+                if (!pointData) {
+                    const prevHour = String((parseInt(hour) - 1 + 24) % 24).padStart(2, '0');
+                    const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${prevHour}.json`;
+                    const resFb = await fetch(fallbackUrl);
+                    if (resFb.ok) {
+                        const fbJson = await resFb.json();
+                        const keys = Object.keys(fbJson).sort();
+                        if(keys.length > 0) {
+                            const lastKey = keys[keys.length - 1];
+                            if(fbJson[lastKey].temp && fbJson[lastKey].temp[0] !== null) {
+                                pointData = fbJson[lastKey];
+                            }
+                        }
                     }
                 }
 
@@ -164,11 +241,14 @@
                 } else {
                     document.getElementById('liveTemp').innerText = "--.-°C";
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error(e); 
+                document.getElementById('liveTemp').innerText = "--.-°C";
+            }
         }
 
         initSystem();
-        setInterval(initSystem, 120000);
+        setInterval(initSystem, 120000); // 2分毎リフレッシュ
     </script>
 </body>
 </html>
