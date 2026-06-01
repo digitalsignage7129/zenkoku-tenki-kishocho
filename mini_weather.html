@@ -2,13 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>天気サイネージ（ミニ版）</title>
+    <title>WEATHER BOARD MINI</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             background-color: #000000;
             color: #ffffff;
-            font-family: "Impact", "Arial Black", "Hiragino Kaku Gothic StdN", "Center Mark", sans-serif;
+            font-family: "Impact", "Arial Black", "Hiragino Kaku Gothic StdN", sans-serif;
             font-weight: 900;
             width: 525px;
             height: 610px;
@@ -16,275 +16,297 @@
             position: relative;
         }
 
-        /* 最上部：ヘッダーバー */
+        /* 上部日付バー */
         .header {
             height: 65px;
-            background-color: #000000;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 10px;
-            border-bottom: 5px solid #ffffff;
+            padding: 0 12px;
+            background: #000000;
         }
-        .header-date { font-size: 38px; color: #ffffff; }
-        .header-name { font-size: 36px; color: #ffff00; }
-        .header-temp { font-size: 42px; color: #00ffcc; }
+        .header-date { font-size: 42px; color: #ffffff; font-family: monospace; }
+        .header-name { font-size: 38px; color: #ffffff; font-weight: 900; }
+        .header-temp { font-size: 52px; color: #00ffcc; font-family: 'Arial Black', sans-serif; }
 
-        /* 上部7割：今日の3連ゾーン（縦415pxを配分） */
-        .today-container {
-            height: 395px;
+        /* 今日（午前・午後・夜間）3連ゾーン */
+        .today-box {
+            height: 385px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 5px 0;
+            padding: 2px 0;
         }
         .time-row {
-            height: 125px;
+            height: 124px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 15px;
-            background-color: #000000;
         }
-        .time-label { font-size: 46px; color: #ffffff; width: 100px; text-align: center; }
-        .weather-icon { font-size: 75px; width: 120px; text-align: center; line-height: 1; }
-        .pop-val { font-size: 95px; color: #ffff00; font-family: monospace; font-weight: 900; width: 180px; text-align: right; }
+        .time-label { font-size: 44px; color: #ffffff; width: 100px; text-align: left; }
+        .weather-icon { font-size: 82px; width: 130px; text-align: center; line-height: 1; }
+        .pop-val { font-size: 110px; color: #ffff00; font-family: "Impact", sans-serif; width: 180px; text-align: right; }
 
-        /* 下部3割：明日・明後日ゾーン（縦150pxを配分） */
-        .future-container {
-            height: 150px;
+        /* 明日・明後日ゾーン */
+        .future-box {
+            height: 160px;
             display: flex;
-            border-top: 5px solid #ffffff;
+            background: #000000;
         }
         .day-col {
             width: 50%;
-            height: 145px;
+            height: 160px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding-top: 5px;
         }
-        .day-col:first-child { border-right: 3px solid #ffffff; }
-        .day-label { font-size: 32px; color: #ffffff; line-height: 1.1; }
-        .day-flex { display: flex; align-items: center; justify-content: center; width: 100%; gap: 10px; margin-top: -5px;}
-        .future-icon { font-size: 60px; }
-        .future-pop { font-size: 65px; color: #ffff00; font-family: monospace; font-weight: 900; }
+        .day-label { font-size: 32px; color: #ffffff; margin-bottom: -5px; }
+        .day-flex { display: flex; align-items: center; justify-content: center; width: 100%; gap: 5px; }
+        .future-icon { font-size: 65px; }
+        .future-pop { font-size: 75px; color: #ffff00; font-family: "Impact", sans-serif; }
 
-        /* クレジット表記 */
+        /* クレジット（極小サイズ） */
         .credit {
             position: absolute;
             bottom: 2px;
-            right: 5px;
-            font-size: 11px;
-            color: #777777;
+            right: 8px;
+            font-size: 12px;
+            color: #555555;
             font-family: sans-serif;
             font-weight: normal;
+            z-index: 10;
         }
-
-        /* デバッグログ表示域（画面外に配置、コンソールと連動） */
-        #debug-console { display: none; }
     </style>
 </head>
 <body>
 
     <div class="header">
         <span class="header-date" id="dateText">--/--</span>
-        <span class="header-name" id="backName">大阪</span>
-        <span class="header-temp" id="liveTemp">--.-</span>
+        <span class="header-name" id="backName">--</span>
+        <span class="header-temp" id="liveTemp">--</span>
     </div>
 
-    <div class="today-container">
+    <div class="today-box">
         <div class="time-row">
             <span class="time-label">午前</span>
-            <span class="weather-icon" id="iconAm">☀</span>
+            <span class="weather-icon" id="iconAm">・</span>
             <span class="pop-val" id="popAm">--</span>
         </div>
         <div class="time-row">
             <span class="time-label">午後</span>
-            <span class="weather-icon" id="iconPm">☁</span>
+            <span class="weather-icon" id="iconPm">・</span>
             <span class="pop-val" id="popPm">--</span>
         </div>
         <div class="time-row">
             <span class="time-label">夜間</span>
-            <span class="weather-icon" id="iconNight">☔</span>
+            <span class="weather-icon" id="iconNight">・</span>
             <span class="pop-val" id="popNight">--</span>
         </div>
     </div>
 
-    <div class="future-container">
+    <div class="future-box">
         <div class="day-col">
             <span class="day-label">明日</span>
             <div class="day-flex">
-                <span class="weather-icon future-icon" id="iconTom">☀</span>
+                <span class="weather-icon future-icon" id="iconTom">・</span>
                 <span class="future-pop" id="popTom">--</span>
             </div>
         </div>
         <div class="day-col">
             <span class="day-label">明後日</span>
             <div class="day-flex">
-                <span class="weather-icon future-icon" id="iconAftTom">☁</span>
+                <span class="weather-icon future-icon" id="iconAftTom">・</span>
                 <span class="future-pop" id="popAftTom">--</span>
             </div>
         </div>
     </div>
 
-    <div class="credit">データ元:気象庁</div>
+    <div class="credit">データ元: 気象庁</div>
 
     <script>
-        // パラメータ解析
         const params = new URLSearchParams(window.location.search);
-        const areaCode = params.get('area') || '270000'; 
-        const amedasCode = params.get('amedas') || '62078';
-        const areaName = params.get('name') || '大阪';
+        const areaCode = params.get('area') || '130000'; 
+        const amedasCode = params.get('amedas') || '44132';
+        const areaName = params.get('name') || '東京';
 
         document.getElementById('backName').innerText = areaName;
 
-        // デバッグ出力関数
-        function logDebug(msg) {
-            console.log(`[WeatherDebug] ${new Date().toISOString().slice(11,19)} : ${msg}`);
+        function debugLog(ctx, status) {
+            console.log(`[WeatherSystem Debug] ${new Date().toLocaleTimeString()} | ${ctx} -> ${status}`);
         }
 
-        // 天気コードを絵文字に変換（LED視認性重視）
         function getWeatherEmoji(code) {
             const c = parseInt(code);
-            if ([100, 101, 123, 130, 131, 140, 181].includes(c)) return '☀'; // 晴れ
-            if ([200, 201, 209, 231, 240, 281].includes(c)) return '☁'; // 曇り
-            if ([300, 301, 302, 303, 308, 309, 311, 313, 314, 315, 340, 350].includes(c)) return '☔'; // 雨
-            if ([400, 401, 402, 403, 405, 409, 430, 450].includes(c)) return '❄'; // 雪
-            // 複合型の大まかな分類
+            if (isNaN(c)) return '☁';
+            if ([100, 101, 123, 130, 131, 140, 181].includes(c)) return '☀';
+            if ([200, 201, 209, 231, 240, 281].includes(c)) return '☁';
+            if ([300, 301, 302, 303, 308, 309, 311, 313, 314, 315, 340, 350].includes(c)) return '☔';
+            if ([400, 401, 402, 403, 405, 409, 430, 450].includes(c)) return '❄';
             if (c >= 100 && c < 200) return '☀';
             if (c >= 200 && c < 300) return '☁';
             if (c >= 300 && c < 400) return '☔';
             return '☁';
         }
 
-        // 日付表示の更新
         function updateDate() {
             const now = new Date();
-            const m = now.getMonth() + 1;
-            const d = now.getDate();
-            document.getElementById('dateText').innerText = `${m}/${d}`;
+            document.getElementById('dateText').innerText = `${now.getMonth() + 1}/${now.getDate()}`;
         }
 
-        // 府県天気予報APIの取得
         async function fetchForecast() {
-            logDebug(`府県予報API取得開始: コード=${areaCode}`);
+            debugLog("府県天気予報API", "通信開始");
             try {
-                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
-                if (!res.ok) throw new Error(`HTTPエラー status: ${res.status}`);
-                const data = await res.json();
-                logDebug("府県予報データロード成功");
+                const response = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
+                if (!response.ok) throw new Error(`HTTP status ${response.status}`);
+                const data = await response.json();
+                debugLog("府県天気予報API", "パース成功");
 
-                // --- 降水確率の抽出処理 ---
-                // 通常[0]が今日・明日、[1]が週間予報データ
+                // 3時間おきの詳細データ用オブジェクト抽出
                 const timeSeriesData = data[0].timeSeries;
                 
-                // 1. 今日の時系列降水確率 (00-06, 06-12, 12-18, 18-24)
+                // 1. 今日の「午前(9時)」「午後(15時)」「夜間(21時)」のマッピング
                 let popAm = '--', popPm = '--', popNight = '--';
-                const popValues = timeSeriesData[1].areas[0].pops;
-                const popTimes = timeSeriesData[1].timePeriod;
-                
-                // 現在時刻に応じて充当判定
-                popTimes.forEach((timeStr, idx) => {
-                    const hour = new Date(timeStr).getHours();
-                    if (hour === 6)  popAm = popValues[idx] || '0';
-                    if (hour === 12) popPm = popValues[idx] || '0';
-                    if (hour === 18) popNight = popValues[idx] || '0';
-                });
-                
+                let codeAm = null, codePm = null, codeNight = null;
+
+                // 天気コード系列のパース (timeSeries[0])
+                const weatherArea = timeSeriesData[0].areas[0];
+                const weatherTimes = timeSeriesData[0].timeSeries;
+                const weatherCodes = weatherArea.weatherCodes;
+
+                // 降水確率系列のパース (timeSeries[1])
+                const popArea = timeSeriesData[1].areas[0];
+                const popTimes = timeSeriesData[1].timeSeries;
+                const popValues = popArea.pops;
+
+                // 今日の日付文字列
+                const todayStr = new Date().getDate();
+
+                // 3時間推移（予報時間軸）を精査して各インデックスへ落とし込む
+                if (popTimes && popValues) {
+                    popTimes.forEach((tStr, idx) => {
+                        const targetDate = new Date(tStr);
+                        if (targetDate.getDate() === todayStr) {
+                            const hr = targetDate.getHours();
+                            if (hr >= 6 && hr < 12)  popAm = popValues[idx];
+                            if (hr >= 12 && hr < 18) popPm = popValues[idx];
+                            if (hr >= 18 && hr < 24) popNight = popValues[idx];
+                        }
+                    });
+                }
+
+                // 規定のコード値マッピング (なければ代表天気で埋める)
+                codeAm = weatherCodes[0];
+                codePm = weatherCodes[0];
+                codeNight = weatherCodes[0];
+
+                document.getElementById('iconAm').innerText = getWeatherEmoji(codeAm);
+                document.getElementById('iconPm').innerText = getWeatherEmoji(codePm);
+                document.getElementById('iconNight').innerText = getWeatherEmoji(codeNight);
+
                 document.getElementById('popAm').innerText = popAm;
                 document.getElementById('popPm').innerText = popPm;
                 document.getElementById('popNight').innerText = popNight;
 
-                // 2. 天気アイコン（今日・明日・明後日）
-                const weatherCodes = timeSeriesData[0].areas[0].weatherCodes;
-                document.getElementById('iconAm').innerText = getWeatherEmoji(weatherCodes[0]); // 今日のメイン
-                document.getElementById('iconPm').innerText = getWeatherEmoji(weatherCodes[0]);
-                document.getElementById('iconTom').innerText = getWeatherEmoji(weatherCodes[1]); // 明日
-
-                // 3. 明日の降水確率（最大値の算出）
-                // 明日のインデックス（通常今日の次から4つ分が明日分）
+                // 2. 明日のデータ処理
+                document.getElementById('iconTom').innerText = getWeatherEmoji(weatherCodes[1]);
                 let tomPops = [];
-                popTimes.forEach((timeStr, idx) => {
-                    const d = new Date(timeStr).getDate();
-                    if (d === new Date(Date.now() + 86400000).getDate()) {
-                        tomPops.push(parseInt(popValues[idx] || 0));
-                    }
-                });
-                const maxTomPop = tomPops.length > 0 ? Math.max(...tomPops) : '--';
-                document.getElementById('popTom').innerText = maxTomPop;
+                const tomorrowStr = new Date(Date.now() + 86400000).getDate();
+                if (popTimes && popValues) {
+                    popTimes.forEach((tStr, idx) => {
+                        if (new Date(tStr).getDate() === tomorrowStr) {
+                            tomPops.push(parseInt(popValues[idx] || 0));
+                        }
+                    });
+                }
+                document.getElementById('popTom').innerText = tomPops.length > 0 ? Math.max(...tomPops) : (popValues[1] || '0');
 
-                // 4. 明後日のデータ（週間予報[1]から取得）
-                const weekSeries = data[1].timeSeries;
-                const weekWeatherCodes = weekSeries[0].areas[0].weatherCodes;
-                // 週間予報の[1]番目が明後日
-                document.getElementById('iconAftTom').innerText = getWeatherEmoji(weekWeatherCodes[1]);
-                
-                const weekPops = weekSeries[1].areas[0].pops;
-                document.getElementById('popAftTom').innerText = weekPops[1] || '--';
+                // 3. 明後日（3日目）のエラー回避・最大値ロジック (data[1]の週間予報から確実に参照)
+                try {
+                    const weekTimeSeries = data[1].timeSeries;
+                    const weekWeatherCodes = weekTimeSeries[0].areas[0].weatherCodes;
+                    // 週間予報配列のインデックス[1]が明後日に該当
+                    document.getElementById('iconAftTom').innerText = getWeatherEmoji(weekWeatherCodes[1]);
 
-                logDebug("画面へのレンダリングが正常に完了しました");
+                    const weekPops = weekTimeSeries[1].areas[0].pops;
+                    // 明後日の降水確率(インデックス[1])が存在すれば表示
+                    document.getElementById('popAftTom').innerText = weekPops[1] !== undefined ? weekPops[1] : '--';
+                    debugLog("明後日(3日目)データ", "正常処理完了");
+                } catch (weekErr) {
+                    debugLog("明後日データ抽出", "フォールバック実行");
+                    document.getElementById('iconAftTom').innerText = getWeatherEmoji(weatherCodes[2] || '200');
+                    document.getElementById('popAftTom').innerText = '0';
+                }
 
             } catch (err) {
-                logDebug(`予報エラー: ${err.message}`);
+                debugLog("府県天気予報API", `エラー: ${err.message}`);
             }
         }
 
-        // アメダス実況データの取得（最新10分間データ）
         async function fetchAmedas() {
-            logDebug(`アメダス実況API取得開始: 観測点=${amedasCode}`);
+            debugLog("アメダス実況API", "現在時刻キーの確認開始");
             try {
-                const res = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
-                const latestTime = (await res.text()).trim();
-                logDebug(`最新アメダスデータタイムスタンプ: ${latestTime}`);
-
-                // 日時パスを組み立てて実況JSONを取得
+                const resTime = await fetch('https://www.jma.go.jp/bosai/amedas/data/latest_time.txt');
+                const latestTime = (await resTime.text()).trim();
+                
                 const year = latestTime.substring(0, 4);
                 const month = latestTime.substring(4, 6);
                 const day = latestTime.substring(6, 8);
                 const hour = latestTime.substring(8, 10);
-                const min = latestTime.substring(10, 12);
 
-                const amedasRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${hour}.json`);
-                if (!amedasRes.ok) throw new Error("アメダスデータファイルの取得に失敗しました");
-                
-                const amedasData = await amedasRes.json();
-                
-                // 直近の10分データを検索
-                const timeKey = `${year}${month}${day}${hour}${min}00`;
-                let tempData = amedasData[timeKey];
-                
-                // もしドンピシャの時間がなければ10分前のキーを試行
-                if (!tempData) {
-                    const backupMin = String(parseInt(min) - 10).padStart(2, '0');
-                    const backupKey = `${year}${month}${day}${hour}${backupMin}00`;
-                    tempData = amedasData[backupKey];
+                // アメダス1時間ブロックのファイルを取得
+                const amedasUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${hour}.json`;
+                const resData = await fetch(amedasUrl);
+                if (!resData.ok) throw new Error("アメダスJSONのダウンロードに失敗");
+                const amedasJson = await resData.json();
+
+                // 与えられた最新タイムスタンプから10分刻みのキーを作成し、データが存在するかチェック
+                let timeKey = `${latestTime}00`;
+                let pointData = amedasJson[timeKey];
+
+                // 気象庁サーバー側での反映遅延によるヌルポインタ対策：最新キーがなければ、10分前、20分前のデータを順次サーチする
+                if (!pointData || !pointData.temp) {
+                    const baseMin = parseInt(latestTime.substring(10, 12));
+                    for (let offset = 10; offset <= 30; offset += 10) {
+                        let checkMin = baseMin - offset;
+                        let checkHour = parseInt(hour);
+                        if (checkMin < 0) {
+                            checkMin += 60;
+                            checkHour = (checkHour - 1 + 24) % 24;
+                        }
+                        const testKey = `${year}${month}${day}${String(checkHour).padStart(2, '0')}${String(checkMin).padStart(2, '0')}00`;
+                        if (amedasJson[testKey] && amedasJson[testKey].temp) {
+                            pointData = amedasJson[testKey];
+                            break;
+                        }
+                    }
                 }
 
-                if (tempData && tempData.temp) {
-                    const currentTemp = tempData.temp[0].toFixed(1);
-                    document.getElementById('liveTemp').innerText = `${currentTemp}°`;
-                    logDebug(`現在気温更新完了: ${currentTemp}度`);
+                if (pointData && pointData.temp) {
+                    const tempVal = pointData.temp[0];
+                    // 小数第一位まで丸めて表示（サイン記号等は不要、数値のみ）
+                    document.getElementById('liveTemp').innerText = `${tempVal.toFixed(1)}`;
+                    debugLog("現在気温データ更新", `成功: ${tempVal}度`);
                 } else {
-                    document.getElementById('liveTemp').innerText = '--;';
-                    logDebug("該当時間のアメダス気温データを特定できませんでした");
+                    document.getElementById('liveTemp').innerText = "--";
+                    debugLog("アメダス気温データ", "指定時間帯に有効値なし");
                 }
 
             } catch (err) {
-                logDebug(`アメダスエラー: ${err.message}`);
-                document.getElementById('liveTemp').innerText = 'ERR';
+                document.getElementById('liveTemp').innerText = "--";
+                debugLog("アメダス実況API", `エラー: ${err.message}`);
             }
         }
 
-        // 定期アップデート（アメダスは10分ごと、予報は1時間ごと）
+        // 初期実行とインターバルタイマー設定
         updateDate();
         fetchForecast();
         fetchAmedas();
 
-        setInterval(updateDate, 60000); // 1分毎に日付リフレッシュ
-        setInterval(fetchAmedas, 600000); // 10分毎にアメダス実況
-        setInterval(fetchForecast, 3600000); // 1時間ごとに予報更新
+        setInterval(updateDate, 30000);
+        setInterval(fetchAmedas, 300000);   // 5分毎にアメダスを再検証
+        setInterval(fetchForecast, 1800000); // 30分毎に予報を更新
     </script>
 </body>
 </html>
