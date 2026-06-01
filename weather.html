@@ -180,18 +180,20 @@
                 }
             } catch(e) { console.error(e); }
 
-            // 2. アメダス現在気温取得（日付の文字列パースを完全廃止し、独立して安全生成するロジック）
+            // 2. アメダス現在気温取得（ハイフン等のノイズを完全に除去するロジック）
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
-                const lTime = (await tRes.text()).trim(); // 例: "20260601143000"
+                const rawTime = (await tRes.text()).trim(); 
                 
-                // 元データ文字列の長さに関わらず、完全に位置固定で抽出する安全策
-                const year  = lTime.substring(0, 4);
-                const month = lTime.substring(4, 6);
-                const day   = lTime.substring(6, 8);
-                const hour  = lTime.substring(8, 10);
+                // 文字列から数字だけを全て抽出して結合 (ハイフンやT、コロンを強制排除)
+                // "2026-06-01T14:40:00+09:00" -> "202606011440000900"
+                const cleanTime = rawTime.replace(/\D/g, '');
+                
+                const year  = cleanTime.substring(0, 4);
+                const month = cleanTime.substring(4, 6);
+                const day   = cleanTime.substring(6, 8);
+                const hour  = cleanTime.substring(8, 10);
 
-                // ハイフンなどが絶対に混入しないURLアセンブリ
                 const urlDateStr = `${year}${month}${day}`;
                 const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${hour}.json`;
                 
