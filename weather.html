@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>WEATHER MAP SIGNAGE REAL TV-COLOR</title>
+    <title>WEATHER MAP SIGNAGE REAL TV-STYLE</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -55,22 +55,18 @@
             border-radius: 20px;
             overflow: hidden;
             border: 4px solid #333333;
-            background: #87ceeb; /* ベースとなるテレビ風の爽やかな青空・海の色 */
+            background: #b3d1ff; /* ロード前の綺麗な海の色 */
         }
 
         #map {
             width: 100%;
             height: 100%;
             z-index: 1;
-            background: #87ceeb !important;
         }
 
-        /* 【新開発】200色の中から選び抜いた「テレビの天気予報」の鮮やかな黄緑と爽やかな青をCSSで完全再現 */
-        .leaflet-tile-container {
-            filter: sepia(1) hue-rotate(50deg) saturate(3.5) brightness(1.1) contrast(1.1);
-        }
+        /* 変なバグを生むCSSフィルターはすべて撤廃しました */
 
-        /* 予報カード：テレビ風デザイン（大阪・堺の重なり完全回避調整版） */
+        /* 予報カード：テレビ風デザイン（大阪・堺の位置微調整版） */
         .leaflet-marker-icon { background: none; border: none; }
         .map-pin-card {
             background: #ffffff;
@@ -149,7 +145,6 @@
         let currentArea = params.get('area') || '130000';
         let currentAmedas = params.get('amedas') || '44132';
 
-        // 大阪と堺の位置を美しくバラけさせました
         const regionalCoordinates = {
             "130000": [{ name: "東京", lat: 35.68, lon: 139.75 }, { name: "大島", lat: 34.75, lon: 139.36 }, { name: "八丈島", lat: 33.11, lon: 139.79 }],
             "270000": [
@@ -191,8 +186,8 @@
 
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lon], zoom);
 
-            // 余計な文字や道路がない、テレビに最適な地形白地図タイル
-            L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
+            // 【完全決着】余計な都市名や道路はなく、最初から「淡いブルーの海と、明るい黄緑の地形」で描かれたテレビ天気予報用の超定番タイル
+            L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain_background/{z}/{x}/{y}{r}.png', {
                 maxZoom: 12, minZoom: 5
             }).addTo(map);
         }
