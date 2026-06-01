@@ -191,4 +191,89 @@
 
                 const areas = forecastData[0].timeSeries[0].areas;
                 const pops = forecastData[0].timeSeries[1] ? forecastData[0].timeSeries[1].areas : [];
-                const temps = forecastData[0].timeSeries
+                const temps = forecastData[0].timeSeries[2] ? forecastData[0].timeSeries[2].areas : [];
+
+                const centroid = pathGenerator.centroid(targetPref);
+
+                areas.forEach((area, idx) => {
+                    let posX = centroid[0] + (idx * 160 - (areas.length - 1) * 80);
+                    let posY = centroid[1] + (idx * 30 - 30);
+
+                    posX = Math.max(120, Math.min(width - 120, posX));
+                    posY = Math.max(100, Math.min(height - 100, posY));
+
+                    const pArea = pops.find(a => a.area.name === area.area.name) || pops[0];
+                    const tArea = temps.find(a => a.area.name === area.area.name) || temps[0];
+
+                    const weatherIcon = getWeatherEmoji(area.weatherCodes[0]);
+                    const popValue = pArea ? (pArea.pops[0] || '0') : '0';
+                    const maxTemp = tArea ? (tArea.temps[0] || '--') : '--';
+                    const minTemp = tArea ? (tArea.temps[1] || '--') : '--';
+
+                    const card = document.createElement('div');
+                    card.className = 'map-pin-card';
+                    card.style.left = `${posX}px`;
+                    card.style.top = `${posY}px`;
+                    card.innerHTML = `
+                        <span class="pin-name">${area.area.name}</span>
+                        <span class="pin-weather">${weatherIcon}</span>
+                        <div class="pin-temps"><span class="max">${maxTemp}</span>/<span class="min">${minTemp}</span></div>
+                        <span class="pin-pop">${popValue}%</span>
+                    `;
+                    pinContainer.appendChild(card);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        async function initSystem() {
+            const now = new Date();
+            document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
+            
+            const prefCodeJis = parseInt(currentArea.substring(0, 2));
+
+            // 1. 地図と予報カードの描画
+            await drawWeatherMap(prefCodeJis);
+
+            // 2. アメダス現在気温取得
+            try {
+                document.getElementById('liveTemp').innerText = "--.-°C";
+                const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
+                const rawTime = (await tRes.text()).trim().replace(/\D/g, '');
+                
+                const year = rawTime.substring(0, 4); const month = rawTime.substring(4, 6); const day = rawTime.substring(6, 8);
+                const hour24 = parseInt(rawTime.substring(8, 10));
+                const utcDate = new Date(new Date(year, parseInt(month)-1, day, hour24).getTime() - (9 * 60 * 60 * 1000));
+                
+                const utcHour = utcDate.getHours();
+                let fileHour = "00";
+                if (utcHour >= 0 && utcHour <= 2) fileHour = "03";
+                else if (utcHour >= 3 && utcHour <= 5) fileHour = "06";
+                else if (utcHour >= 6 && utcHour <= 8) fileHour = "09";
+                else if (utcHour >= 9 && utcHour <= 11) fileHour = "12";
+                else if (utcHour >= 12 && utcHour <= 14) fileHour = "15";
+                else if (utcHour >= 15 && utcHour <= 17) fileHour = "18";
+                else if (utcHour >= 18 && utcHour <= 20) fileHour = "21";
+                else fileHour = "00";
+
+                const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${currentAmedas}/${year}${month}${day}_${fileHour}.json`;
+                const amedasRes = await fetch(targetUrl);
+                if (amedasRes.ok) {
+                    const amedasData = await amedasRes.json();
+                    const keys = Object.keys(amedasData).sort();
+                    let finalTemp = null;
+                    for (let i = keys.length - 1; i >= 0; i--) {
+                        if (amedasData[keys[i]].temp && amedasData[keys[i]].temp[0] !== null) {
+                            finalTemp = amedasData[keys[i]].temp[0];
+                            break;
+                        }
+                    }
+                    if (finalTemp !== null) document.getElementById('liveTemp').innerText = finalTemp.toFixed(1) + '°C';
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        initSystem();
+        setInterval(initSystem, 120000);
+    </script>
+</body>
+</html>
