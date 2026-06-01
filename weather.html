@@ -180,26 +180,31 @@
                 }
             } catch(e) { console.error(e); }
 
-            // 2. アメダス現在気温取得（ハイフン等のノイズを完全に除去するロジック）
+            // 2. アメダス現在気温取得（12時間制ファイル名ルール対応版）
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const rawTime = (await tRes.text()).trim(); 
-                
-                // 文字列から数字だけを全て抽出して結合 (ハイフンやT、コロンを強制排除)
-                // "2026-06-01T14:40:00+09:00" -> "202606011440000900"
                 const cleanTime = rawTime.replace(/\D/g, '');
                 
                 const year  = cleanTime.substring(0, 4);
                 const month = cleanTime.substring(4, 6);
                 const day   = cleanTime.substring(6, 8);
-                const hour  = cleanTime.substring(8, 10);
+                const hour24 = parseInt(cleanTime.substring(8, 10)); // 24時間制の時(数値)
 
-                const urlDateStr = `${year}${month}${day}`;
-                const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${hour}.json`;
+                // 気象庁アメダス仕様：午後（13時〜23時）であってもファイル名は12時間制（01〜11）になるルールを適用
+                const hour12 = hour24 % 12;
+                const hour = String(hour12).padStart(2, '0'); // "00" 〜 "11" に強制変換
                 
-                const amedasRes = await fetch(targetUrl);
-                let amedasData = amedasRes.ok ? await amedasRes.json() : null;
+                const urlDateStr = `${year}${month}${day}`;
+                let amedasData = null;
                 let finalTemp = null;
+
+                // 最新時間の12時間制ファイルをリクエスト
+                try {
+                    const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${hour}.json`;
+                    const amedasRes = await fetch(targetUrl);
+                    if (amedasRes.ok) amedasData = await amedasRes.json();
+                } catch(err) { console.log("最新ファイル未生成のため前時を参照します"); }
 
                 if (amedasData) {
                     const keys = Object.keys(amedasData).sort();
@@ -211,20 +216,26 @@
                     }
                 }
 
+                // 最新ファイルがない、またはデータがない場合は1時間前をリクエスト
                 if (finalTemp === null) {
-                    const prevHour = String((parseInt(hour) - 1 + 24) % 24).padStart(2, '0');
-                    const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${prevHour}.json`;
-                    const resFb = await fetch(fallbackUrl);
-                    if (resFb.ok) {
-                        const fbJson = await resFb.json();
-                        const keys = Object.keys(fbJson).sort();
-                        for (let i = keys.length - 1; i >= 0; i--) {
-                            if (fbJson[keys[i]].temp && fbJson[keys[i]].temp[0] !== null) {
-                                finalTemp = fbJson[keys[i]].temp[0];
-                                break;
+                    try {
+                        const prevHour24 = (hour24 - 1 + 24) % 24;
+                        const prevHour12 = prevHour24 % 12;
+                        const prevHour = String(prevHour12).padStart(2, '0');
+                        
+                        const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${prevHour}.json`;
+                        const resFb = await fetch(fallbackUrl);
+                        if (resFb.ok) {
+                            const fbJson = await resFb.json();
+                            const keys = Object.keys(fbJson).sort();
+                            for (let i = keys.length - 1; i >= 0; i--) {
+                                if (fbJson[keys[i]].temp && fbJson[keys[i]].temp[0] !== null) {
+                                    finalTemp = fbJson[keys[i]].temp[0];
+                                    break;
+                                }
                             }
                         }
-                    }
+                    } catch(err) { console.error("前時ファイル取得エラー:", err); }
                 }
 
                 document.getElementById('liveTemp').innerText = finalTemp !== null ? finalTemp.toFixed(1) + '°C' : "--.-°C";
