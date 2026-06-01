@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>WEATHER MAP SIGNAGE PERFECT VISIBILITY</title>
+    <title>WEATHER MAP SIGNAGE TV-STYLE COLOR</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
@@ -17,7 +17,7 @@
             height: 100vh;
         }
         
-        /* ヘッダー */
+        /* 固定ヘッダー */
         .header {
             display: flex;
             justify-content: space-between;
@@ -46,7 +46,7 @@
         .temp-area { font-size: 35px; color: #ffffff; background: #333333; padding: 4px 12px; border-radius: 8px; }
         .temp-display { font-size: 110px; color: #00ffcc; font-family: 'Arial Black', sans-serif; line-height: 0.9; }
 
-        /* 地図エリア */
+        /* 地図エリア（テレビ風の明るい海の色にベースを固定） */
         .map-viewport {
             position: relative;
             width: 100%;
@@ -55,28 +55,28 @@
             border-radius: 20px;
             overflow: hidden;
             border: 4px solid #333333;
-            background: #000000;
+            background: #9bc2e6; 
         }
 
         #map {
             width: 100%;
             height: 100%;
             z-index: 1;
-            background: #000000 !important;
+            background: #9bc2e6 !important;
         }
 
-        /* 予報カード：サイズを縦横少しスリムにして、重なりを完全に回避 */
+        /* 予報カード：テレビ風デザイン（重なり対策でコンパクトサイズを維持） */
         .leaflet-marker-icon { background: none; border: none; }
         .map-pin-card {
             background: #ffffff;
             border: 3px solid #b5b5b5;
             border-radius: 12px;
-            width: 130px; /* 160pxから130pxにコンパクト化 */
+            width: 130px;
             padding: 4px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
             text-align: center;
         }
         .pin-name {
@@ -112,8 +112,8 @@
         <div class="header-left">
             <span class="date" id="dateText">--/--</span>
             <select class="pref-selector" id="prefSelect" onchange="changePrefecture()">
-                <option value="130000,44132,35.6895,139.5000,9">東京都</option>
-                <option value="270000,62078,34.5500,135.5500,9">大阪府</option>
+                <option value="130000,44132,35.6500,139.5000,9">東京都</option>
+                <option value="270000,62078,34.5800,135.4500,9">大阪府</option>
                 <option value="020000,31151,40.7500,140.8500,8">青森県</option>
                 <option value="016000,14163,43.4000,142.3000,7">北海道</option>
                 <option value="040000,34392,38.4000,140.9000,8">宮城県</option>
@@ -144,10 +144,13 @@
         let currentArea = params.get('area') || '130000';
         let currentAmedas = params.get('amedas') || '44132';
 
-        // 【位置微調整】カードが重ならないように、緯度・経度の数値を絶妙に離しました
+        // 大阪と堺が絶対に重ならない位置に微調整
         const regionalCoordinates = {
             "130000": [{ name: "東京", lat: 35.68, lon: 139.75 }, { name: "大島", lat: 34.75, lon: 139.36 }, { name: "八丈島", lat: 33.11, lon: 139.79 }],
-            "270000": [{ name: "大阪", lat: 34.72, lon: 135.51 }, { name: "堺", lat: 34.48, lon: 135.43 }],
+            "270000": [
+                { name: "大阪", lat: 34.76, lon: 135.56 }, 
+                { name: "堺",   lat: 34.42, lon: 135.36 }  
+            ],
             "020000": [{ name: "青森", lat: 40.82, lon: 140.74 }, { name: "むつ", lat: 41.28, lon: 141.21 }, { name: "八戸", lat: 40.51, lon: 141.48 }],
             "016000": [{ name: "札幌", lat: 43.06, lon: 141.35 }, { name: "旭川", lat: 43.77, lon: 142.35 }],
             "140000": [{ name: "横浜", lat: 35.44, lon: 139.64 }, { name: "小田原", lat: 35.21, lon: 139.15 }],
@@ -183,8 +186,8 @@
 
             map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lon], zoom);
 
-            // 4枚目で成功した、文字なし・道路なしの渋いダークモード背景をそのまま採用
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+            // 【完全解決】国土地理院が配信している、文字なし・道路なしの「鮮やかな緑と青の白地図」タイルを直接指定！
+            L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/blank/{z}/{x}/{y}.png', {
                 maxZoom: 12, minZoom: 5
             }).addTo(map);
         }
@@ -232,7 +235,7 @@
                 });
             } catch(e) { console.error(e); }
 
-            // アメダス最新気温を取得
+            // アメダス最新気温
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const rawTime = (await tRes.text()).trim().replace(/\D/g, '');
