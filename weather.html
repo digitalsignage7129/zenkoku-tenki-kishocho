@@ -14,57 +14,72 @@
             overflow: hidden;
             height: 100vh;
         }
-        /* ヘッダー部分は固定 */
+        
+        /* ヘッダー：左右のメリハリを強化 */
         .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border-bottom: 5px solid #ffffff;
-            padding-bottom: 10px;
-            margin-bottom: 30px;
+            align-items: flex-end; /* 下揃えにしてどっしり感を出す */
+            border-bottom: 6px solid #ffffff;
+            padding-bottom: 15px;
+            margin-bottom: 35px;
         }
-        .date { font-size: 50px; font-family: monospace; }
-        .name { font-size: 55px; color: #ffffff; font-weight: 900; margin-left: 20px; }
-        .temp-area { font-size: 28px; color: #aaaaaa; }
-        .temp-display { font-size: 75px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; }
+        
+        /* 左側：日付と地域 */
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .date { font-size: 55px; font-family: monospace; color: #aaaaaa; }
+        .name { font-size: 70px; color: #ffffff; font-weight: 900; line-height: 1.1; }
+
+        /* 右側：現在気温を圧倒的に目立たせる */
+        .header-right {
+            text-align: right;
+            display: flex;
+            align-items: baseline; /* 単位と数字の底辺を合わせる */
+            gap: 15px;
+        }
+        .temp-area { font-size: 35px; color: #ffffff; background: #333333; padding: 4px 12px; border-radius: 8px; }
+        .temp-display { font-size: 110px; color: #00ffcc; font-family: 'Arial Black', sans-serif; line-height: 0.9; }
 
         /* 3時間ごとの横並びコンテナ */
         .timeline-container {
             display: flex;
             justify-content: space-between;
             gap: 20px;
-            height: calc(100vh - 180px);
+            height: calc(100vh - 230px); /* ヘッダーが大きくなった分を調整 */
         }
         .time-box {
             flex: 1;
-            background: #111111;
-            border: 4px solid #333333;
+            background: #000000;
+            border: 4px solid #ffffff;
             border-radius: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: space-around;
-            padding: 20px 10px;
+            padding: 25px 10px;
         }
-        .time-label { font-size: 35px; color: #ffff00; font-family: monospace; }
-        .time-icon { font-size: 90px; line-height: 1; }
-        .time-temp { font-size: 45px; color: #ffffff; }
+        .time-label { font-size: 40px; color: #ffff00; font-family: monospace; }
+        .time-icon { font-size: 100px; line-height: 1; }
+        .time-temp { font-size: 50px; color: #ffffff; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>
+        <div class="header-left">
             <span class="date">6/1</span>
             <span class="name" id="backName">青森</span>
         </div>
-        <div>
+        <div class="header-right">
             <span class="temp-area">現在気温</span>
-            <span class="temp-display">--.-°C</span>
+            <span class="temp-display">26.5°C</span>
         </div>
     </div>
 
-    <!-- ここに3時間ごとのデータが横並びで入るイメージです -->
     <div class="timeline-container">
         <div class="time-box">
             <span class="time-label">15:00</span>
