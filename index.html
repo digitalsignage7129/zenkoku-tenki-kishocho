@@ -3,73 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天気サイネージ コントローラー</title>
+    <title>天気サイネージ・コントロールセンター</title>
     <style>
         body {
             background-color: #121212;
-            color: #ffffff;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            padding: 20px;
-            max-width: 600px;
+            color: #e0e0e0;
+            font-family: 'Helvetica Neue', Arial, "Hiragino Kaku Gothic ProN", sans-serif;
+            padding: 30px 15px;
+            max-width: 700px;
             margin: 0 auto;
         }
-        h1 { text-align: center; color: #00ffcc; font-size: 1.5rem; }
-        .search-box {
-            margin: 20px 0;
-            display: flex;
-            gap: 10px;
+        h1 { text-align: center; color: #00ffcc; font-size: 1.6rem; margin-bottom: 25px; }
+        .control-panel { background: #1e1e1e; padding: 25px; border-radius: 12px; border: 1px solid #333; }
+        label { display: block; margin-bottom: 10px; font-weight: bold; color: #ffffff; }
+        select {
+            width: 100%; padding: 14px; font-size: 16px; border-radius: 8px;
+            background: #2a2a2a; color: #fff; border: 1px solid #444; margin-bottom: 25px;
+            cursor: pointer;
         }
-        input, select, button {
-            padding: 12px;
-            font-size: 16px;
-            border-radius: 6px;
-            border: 1px solid #333;
+        .btn-container { display: flex; gap: 15px; }
+        button {
+            flex: 1; padding: 18px; font-size: 1.1rem; font-weight: bold;
+            border-radius: 8px; border: none; cursor: pointer; transition: background 0.2s;
         }
-        input { flex: 1; background: #222; color: #fff; }
-        select { width: 100%; background: #222; color: #fff; margin-bottom: 15px; }
-        button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; border: none; }
-        button:hover { background: #00ccaa; }
-        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .btn-group button { flex: 1; padding: 15px; font-size: 1.1rem; }
-        .btn-mini { background: #ffcc00; color: #000; }
-        .btn-mini:hover { background: #ddaa00; }
-        .area-list { background: #1e1e1e; padding: 15px; border-radius: 8px; }
+        .btn-main { background: #00ffcc; color: #000; }
+        .btn-main:hover { background: #00ccaa; }
+        .btn-mini { background: #ffff00; color: #000; }
+        .btn-mini:hover { background: #dddd00; }
+        .note { margin-top: 15px; font-size: 12px; color: #888; text-align: center; }
     </style>
 </head>
 <body>
 
-    <h1>LED天気サイネージ コントロール</h1>
+    <h1>LED天気サイネージ 配信管理パネル</h1>
     
-    <div class="area-list">
-        <label for="areaSelect">▼ 地域を選択（主な府県予報区）</label>
+    <div class="control-panel">
+        <label for="areaSelect">▼ 対象の府県予報区・地域を選択してください</label>
         <select id="areaSelect">
-            <option value="270000" data-amedas="62078">大阪府（大阪）</option>
-            <option value="130000" data-amedas="44132">東京都（東京）</option>
-            <option value="140000" data-amedas="46141">神奈川県（横浜）</option>
-            <option value="230000" data-amedas="51106">愛知県（名古屋）</option>
-            <option value="260000" data-amedas="61286">京都府（京都）</option>
-            <option value="280000" data-amedas="63351">兵庫県（神戸）</option>
-            <option value="400000" data-amedas="82182">福岡県（福岡）</option>
-            <option value="016000" data-amedas="14163">北海道（札幌）</option>
-            <option value="040000" data-amedas="34392">宮城県（仙台）</option>
-            <option value="471000" data-amedas="91197">沖縄県（那覇）</option>
+            <option value="011000" data-amedas="11061">北海道 宗谷地方 (稚内)</option>
+            <option value="012000" data-amedas="14121">北海道 上川・留萌地方 (旭川)</option>
+            <option value="013000" data-amedas="17231">北海道 網走・北見・紋別地方 (網走)</option>
+            <option value="014100" data-amedas="19422">北海道 釧路・根室地方 (釧路)</option>
+            <option value="014000" data-amedas="20182">北海道 十勝地方 (帯広)</option>
+            <option value="015000" data-amedas="23166">北海道 胆振・日高地方 (室蘭)</option>
+            <option value="016000" data-amedas="14163">北海道 石狩・空知・後志地方 (札幌)</option>
+            <option value="017000" data-amedas="26106">北海道 渡島・檜山地方 (函館)</option>
+            <option value="020000" data-amedas="31348">青森県 (青森)</option>
+            <option value="030000" data-amedas="33421">岩手県 (盛岡)</option>
+            <option value="040000" data-amedas="34392">宮城県 (仙台)</option>
+            <option value="050000" data-amedas="32012">秋田県 (秋田)</option>
+            <option value="060000" data-amedas="35426">山形県 (山形)</option>
+            <option value="070000" data-amedas="36462">福島県 (福島)</option>
+            <option value="080000" data-amedas="40211">茨城県 (水戸)</option>
+            <option value="090000" data-amedas="41277">栃木県 (宇都宮)</option>
+            <option value="100000" data-amedas="42321">群馬県 (前橋)</option>
+            <option value="110000" data-amedas="43056">埼玉県 (熊谷)</option>
+            <option value="120000" data-amedas="45212">千葉県 (千葉)</option>
+            <option value="130000" data-amedas="44132" selected>東京都 (東京)</option>
+            <option value="140000" data-amedas="46141">神奈川県 (横浜)</option>
+            <option value="150000" data-amedas="54232">新潟県 (新潟)</option>
+            <option value="160000" data-amedas="55102">富山県 (富山)</option>
+            <option value="170000" data-amedas="56227">石川県 (金沢)</option>
+            <option value="180000" data-amedas="57066">福井県 (福井)</option>
+            <option value="190000" data-amedas="49142">山梨県 (甲府)</option>
+            <option value="200000" data-amedas="48156">長野県 (長野)</option>
+            <option value="210000" data-amedas="52146">岐阜県 (岐阜)</option>
+            <option value="220000" data-amedas="50331">静岡県 (静岡)</option>
+            <option value="230000" data-amedas="51106">愛知県 (名古屋)</option>
+            <option value="240000" data-amedas="53127">三重県 (津)</option>
+            <option value="250000" data-amedas="60131">滋賀県 (大津)</option>
+            <option value="260000" data-amedas="61286">京都府 (京都)</option>
+            <option value="270000" data-amedas="62078">大阪府 (大阪)</option>
+            <option value="280000" data-amedas="63351">兵庫県 (神戸)</option>
+            <option value="290000" data-amedas="64056">奈良県 (奈良)</option>
+            <option value="300000" data-amedas="65042">和歌山県 (和歌山)</option>
+            <option value="310000" data-amedas="69117">鳥取県 (鳥取)</option>
+            <option value="320000" data-amedas="68132">島根県 (松江)</option>
+            <option value="330000" data-amedas="66281">岡山県 (岡山)</option>
+            <option value="340000" data-amedas="67437">広島県 (広島)</option>
+            <option value="350000" data-amedas="81151">山口県 (山口)</option>
+            <option value="360000" data-amedas="71141">徳島県 (徳島)</option>
+            <option value="370000" data-amedas="72061">香川県 (高松)</option>
+            <option value="380000" data-amedas="73141">愛媛県 (松山)</option>
+            <option value="390000" data-amedas="74181">高知県 (高知)</option>
+            <option value="400000" data-amedas="82182">福岡県 (福岡)</option>
+            <option value="410000" data-amedas="85142">佐賀県 (佐賀)</option>
+            <option value="420000" data-amedas="84172">長崎県 (長崎)</option>
+            <option value="430000" data-amedas="86141">熊本県 (熊本)</option>
+            <option value="440000" data-amedas="83411">大分県 (大分)</option>
+            <option value="450000" data-amedas="87326">宮崎県 (宮崎)</option>
+            <option value="460100" data-amedas="88936">鹿児島県 薩摩・大隅・地方 (鹿児島)</option>
+            <option value="460040" data-amedas="90401">鹿児島県 奄美地方 (名瀬)</option>
+            <option value="471000" data-amedas="91197">沖縄県 本島地方 (那覇)</option>
+            <option value="472000" data-amedas="91316">沖縄県 大東島地方</option>
+            <option value="473000" data-amedas="93016">沖縄県 宮古島地方</option>
+            <option value="474000" data-amedas="94017">沖縄県 八重山地方 (石垣島)</option>
         </select>
 
-        <div class="btn-group">
-            <button onclick="launch('weather.html')">通常版（大）を起動</button>
+        <div class="btn-container">
+            <button class="btn-main" onclick="launch('weather.html')">通常版（大）を起動</button>
             <button class="btn-mini" onclick="launch('mini_weather.html')">ミニ版（小）を起動</button>
         </div>
     </div>
+    <div class="note">※起動後、LEDサイネージ用ブラウザの表示サイズに適合します。</div>
 
     <script>
-        function launch(page) {
+        function launch(targetPage) {
             const select = document.getElementById('areaSelect');
-            const areaCode = select.value;
-            const amedasCode = select.options[select.selectedIndex].getAttribute('data-amedas');
-            const areaName = select.options[select.selectedIndex].text.split('（')[0];
+            const area = select.value;
+            const amedas = select.options[select.selectedIndex].getAttribute('data-amedas');
+            // 表示用の地名を抽出
+            const rawName = select.options[select.selectedIndex].text;
+            const name = rawName.split(' (')[0].replace('北海道 ', '').replace('県', '').replace('府', '');
             
-            // クエリパラメータを付与して遷移
-            window.location.href = `${page}?area=${areaCode}&amedas=${amedasCode}&name=${encodeURIComponent(areaName)}`;
+            window.location.href = `${targetPage}?area=${area}&amedas=${amedas}&name=${encodeURIComponent(name)}`;
         }
     </script>
 </body>
