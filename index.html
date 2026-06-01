@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>天気サイネージ コントローラー</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 { text-align: center; color: #00ffcc; font-size: 1.5rem; }
+        .search-box {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        input, select, button {
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        input { flex: 1; background: #222; color: #fff; }
+        select { width: 100%; background: #222; color: #fff; margin-bottom: 15px; }
+        button { background: #00ffcc; color: #000; font-weight: bold; cursor: pointer; border: none; }
+        button:hover { background: #00ccaa; }
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-group button { flex: 1; padding: 15px; font-size: 1.1rem; }
+        .btn-mini { background: #ffcc00; color: #000; }
+        .btn-mini:hover { background: #ddaa00; }
+        .area-list { background: #1e1e1e; padding: 15px; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <h1>LED天気サイネージ コントロール</h1>
+    
+    <div class="area-list">
+        <label for="areaSelect">▼ 地域を選択（主な府県予報区）</label>
+        <select id="areaSelect">
+            <option value="270000" data-amedas="62078">大阪府（大阪）</option>
+            <option value="130000" data-amedas="44132">東京都（東京）</option>
+            <option value="140000" data-amedas="46141">神奈川県（横浜）</option>
+            <option value="230000" data-amedas="51106">愛知県（名古屋）</option>
+            <option value="260000" data-amedas="61286">京都府（京都）</option>
+            <option value="280000" data-amedas="63351">兵庫県（神戸）</option>
+            <option value="400000" data-amedas="82182">福岡県（福岡）</option>
+            <option value="016000" data-amedas="14163">北海道（札幌）</option>
+            <option value="040000" data-amedas="34392">宮城県（仙台）</option>
+            <option value="471000" data-amedas="91197">沖縄県（那覇）</option>
+        </select>
+
+        <div class="btn-group">
+            <button onclick="launch('weather.html')">通常版（大）を起動</button>
+            <button class="btn-mini" onclick="launch('mini_weather.html')">ミニ版（小）を起動</button>
+        </div>
+    </div>
+
+    <script>
+        function launch(page) {
+            const select = document.getElementById('areaSelect');
+            const areaCode = select.value;
+            const amedasCode = select.options[select.selectedIndex].getAttribute('data-amedas');
+            const areaName = select.options[select.selectedIndex].text.split('（')[0];
+            
+            // クエリパラメータを付与して遷移
+            window.location.href = `${page}?area=${areaCode}&amedas=${amedasCode}&name=${encodeURIComponent(areaName)}`;
+        }
+    </script>
+</body>
+</html>
