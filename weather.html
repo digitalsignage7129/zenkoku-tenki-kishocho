@@ -5,29 +5,61 @@
     <title>WEATHER BOARD STANDARD</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #000000; color: #ffffff; font-family: "Hiragino Kaku Gothic StdN", "Meiryo", Arial, sans-serif; font-weight: bold; padding: 25px; overflow: hidden; height: 100vh; }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 5px solid #ffffff; padding-bottom: 10px; margin-bottom: 20px; }
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: "Hiragino Kaku Gothic StdN", "Meiryo", Arial, sans-serif;
+            font-weight: bold;
+            padding: 25px;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 5px solid #ffffff;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         .title-group { display: flex; flex-direction: column; gap: 2px; }
         .title-top { display: flex; gap: 30px; align-items: baseline; }
         .date { font-size: 50px; font-family: monospace; }
         .name { font-size: 55px; color: #ffffff; font-weight: 900; }
         .credit-tag { font-size: 14px; color: #aaaaaa; font-weight: normal; margin-top: 2px; }
+        
         .temp-container { text-align: right; }
         .temp-area { font-size: 28px; color: #aaaaaa; vertical-align: middle; }
         .temp-display { font-size: 75px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; vertical-align: middle; }
+
         .forecast-grid { display: flex; gap: 25px; height: calc(100vh - 180px); }
-        .day-card { flex: 1; background: #000000; border: 4px solid #ffffff; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 20px 10px; }
+        .day-card {
+            flex: 1;
+            background: #000000;
+            border: 4px solid #ffffff;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-around;
+            padding: 20px 10px;
+        }
         .card-label { font-size: 45px; color: #ffffff; font-weight: 900; border-bottom: 2px solid #555; width: 80%; text-align: center; padding-bottom: 5px;}
+        
+        /* 今日の枠内の3時間おき縦並び */
         .today-timeline { width: 100%; height: 80%; display: flex; flex-direction: column; justify-content: space-between; }
         .today-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 25px; }
         .row-label { font-size: 32px; color: #ffffff; width: 80px; }
         .row-icon { font-size: 70px; }
         .row-pop { font-size: 65px; color: #ffff00; font-family: "Impact", sans-serif; }
+
+        /* 明日・明後日用 */
         .card-icon { font-size: 150px; line-height: 1; }
         .card-pop { font-size: 90px; color: #ffff00; font-family: "Impact", sans-serif; }
     </style>
 </head>
 <body>
+
     <div class="header">
         <div class="title-group">
             <div class="title-top">
@@ -40,6 +72,7 @@
             <span class="temp-area">現在気温</span><span class="temp-display" id="liveTemp">--.-°C</span>
         </div>
     </div>
+
     <div class="forecast-grid">
         <div class="day-card">
             <span class="card-label">今日</span>
@@ -61,22 +94,26 @@
                 </div>
             </div>
         </div>
+        
         <div class="day-card">
             <span class="card-label">明日</span>
             <span class="card-icon" id="iconTom">・</span>
             <span class="card-pop" id="popTom">--%</span>
         </div>
+        
         <div class="day-card">
             <span class="card-label">明後日</span>
             <span class="card-icon" id="iconAftTom">・</span>
             <span class="card-pop" id="popAftTom">--%</span>
         </div>
     </div>
+
     <script>
         const params = new URLSearchParams(window.location.search);
         const areaCode = params.get('area') || '130000';
         const amedasCode = params.get('amedas') || '44132';
         const areaName = params.get('name') || '東京';
+
         document.getElementById('backName').innerText = areaName;
 
         function getWeatherEmoji(code) {
@@ -95,6 +132,7 @@
             try {
                 const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
                 const data = await res.json();
+                
                 const timeSeriesData = data[0].timeSeries;
                 const fSeries = timeSeriesData[0].areas[0];
                 
@@ -127,7 +165,9 @@
                 const tomorrowStr = new Date(Date.now() + 86400000).getDate();
                 if (popTimes && popValues) {
                     popTimes.forEach((tStr, idx) => {
-                        if (new Date(tStr).getDate() === tomorrowStr) tomPops.push(parseInt(popValues[idx] || 0));
+                        if (new Date(tStr).getDate() === tomorrowStr) {
+                            tomPops.push(parseInt(popValues[idx] || 0));
+                        }
                     });
                 }
                 document.getElementById('popTom').innerText = (tomPops.length > 0 ? Math.max(...tomPops) : '0') + '%';
@@ -142,16 +182,18 @@
                 }
             } catch(e) { console.error(e); }
 
-            // 2. アメダス現在気温取得（末尾キー配列直接抽出ロジック）
+            // 2. アメダス現在気温取得（日付バグ修正・最新キー抽出版）
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const lTime = (await tRes.text()).trim();
-                const year = lTime.substring(0, 4);
+                
+                const year  = lTime.substring(0, 4);
                 const month = lTime.substring(4, 6);
-                const day = lTime.substring(6, 8);
-                const hour = lTime.substring(8, 10);
+                const day   = lTime.substring(6, 8);
+                const hour  = lTime.substring(8, 10);
 
-                const amedasRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${hour}.json`);
+                const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${hour}.json`;
+                const amedasRes = await fetch(targetUrl);
                 let amedasData = amedasRes.ok ? await amedasRes.json() : null;
                 let finalTemp = null;
 
@@ -164,9 +206,11 @@
                         }
                     }
                 }
+
                 if (finalTemp === null) {
                     const prevHour = String((parseInt(hour) - 1 + 24) % 24).padStart(2, '0');
-                    const resFb = await fetch(`https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${prevHour}.json`);
+                    const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${prevHour}.json`;
+                    const resFb = await fetch(fallbackUrl);
                     if (resFb.ok) {
                         const fbJson = await resFb.json();
                         const keys = Object.keys(fbJson).sort();
@@ -178,8 +222,12 @@
                         }
                     }
                 }
-                document.getElementById('liveTemp').innerText = finalTemp !== null ? finalTemp.toFixed(1) + '°C' : '--.-°C';
-            } catch(e) { document.getElementById('liveTemp').innerText = "--.-°C"; }
+
+                document.getElementById('liveTemp').innerText = finalTemp !== null ? finalTemp.toFixed(1) + '°C' : "--.-°C";
+            } catch(e) { 
+                console.error(e); 
+                document.getElementById('liveTemp').innerText = "--.-°C";
+            }
         }
 
         initSystem();
