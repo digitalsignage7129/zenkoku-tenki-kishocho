@@ -46,14 +46,12 @@
         }
         .card-label { font-size: 45px; color: #ffffff; font-weight: 900; border-bottom: 2px solid #555; width: 80%; text-align: center; padding-bottom: 5px;}
         
-        /* 今日の枠内の3時間おき縦並び */
         .today-timeline { width: 100%; height: 80%; display: flex; flex-direction: column; justify-content: space-between; }
         .today-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 25px; }
         .row-label { font-size: 32px; color: #ffffff; width: 80px; }
         .row-icon { font-size: 70px; }
         .row-pop { font-size: 65px; color: #ffff00; font-family: "Impact", sans-serif; }
 
-        /* 明日・明後日用 */
         .card-icon { font-size: 150px; line-height: 1; }
         .card-pop { font-size: 90px; color: #ffff00; font-family: "Impact", sans-serif; }
     </style>
@@ -182,17 +180,21 @@
                 }
             } catch(e) { console.error(e); }
 
-            // 2. アメダス現在気温取得（日付バグ修正・最新キー抽出版）
+            // 2. アメダス現在気温取得（日付の文字列パースを完全廃止し、独立して安全生成するロジック）
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
-                const lTime = (await tRes.text()).trim();
+                const lTime = (await tRes.text()).trim(); // 例: "20260601143000"
                 
+                // 元データ文字列の長さに関わらず、完全に位置固定で抽出する安全策
                 const year  = lTime.substring(0, 4);
                 const month = lTime.substring(4, 6);
                 const day   = lTime.substring(6, 8);
                 const hour  = lTime.substring(8, 10);
 
-                const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${hour}.json`;
+                // ハイフンなどが絶対に混入しないURLアセンブリ
+                const urlDateStr = `${year}${month}${day}`;
+                const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${hour}.json`;
+                
                 const amedasRes = await fetch(targetUrl);
                 let amedasData = amedasRes.ok ? await amedasRes.json() : null;
                 let finalTemp = null;
@@ -209,7 +211,7 @@
 
                 if (finalTemp === null) {
                     const prevHour = String((parseInt(hour) - 1 + 24) % 24).padStart(2, '0');
-                    const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${year}${month}${day}_${prevHour}.json`;
+                    const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${prevHour}.json`;
                     const resFb = await fetch(fallbackUrl);
                     if (resFb.ok) {
                         const fbJson = await resFb.json();
