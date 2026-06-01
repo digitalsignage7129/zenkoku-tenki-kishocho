@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>WEATHER BOARD STANDARD</title>
+    <title>WEATHER BOARD FLEX</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -14,29 +14,31 @@
             overflow: hidden;
             height: 100vh;
         }
+        /* ヘッダー部分は固定 */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 5px solid #ffffff;
             padding-bottom: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
-        .title-group { display: flex; flex-direction: column; gap: 2px; }
-        .title-top { display: flex; gap: 30px; align-items: baseline; }
         .date { font-size: 50px; font-family: monospace; }
-        .name { font-size: 55px; color: #ffffff; font-weight: 900; }
-        .credit-tag { font-size: 14px; color: #aaaaaa; font-weight: normal; margin-top: 2px; }
-        
-        .temp-container { text-align: right; }
-        .temp-area { font-size: 28px; color: #aaaaaa; vertical-align: middle; }
-        .temp-display { font-size: 75px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; vertical-align: middle; }
+        .name { font-size: 55px; color: #ffffff; font-weight: 900; margin-left: 20px; }
+        .temp-area { font-size: 28px; color: #aaaaaa; }
+        .temp-display { font-size: 75px; color: #00ffcc; font-family: 'Arial Black', sans-serif; margin-left: 10px; }
 
-        .forecast-grid { display: flex; gap: 25px; height: calc(100vh - 180px); }
-        .day-card {
+        /* 3時間ごとの横並びコンテナ */
+        .timeline-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            height: calc(100vh - 180px);
+        }
+        .time-box {
             flex: 1;
-            background: #000000;
-            border: 4px solid #ffffff;
+            background: #111111;
+            border: 4px solid #333333;
             border-radius: 16px;
             display: flex;
             flex-direction: column;
@@ -44,224 +46,47 @@
             justify-content: space-around;
             padding: 20px 10px;
         }
-        .card-label { font-size: 45px; color: #ffffff; font-weight: 900; border-bottom: 2px solid #555; width: 80%; text-align: center; padding-bottom: 5px;}
-        
-        .today-timeline { width: 100%; height: 80%; display: flex; flex-direction: column; justify-content: space-between; }
-        .today-row { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 25px; }
-        .row-label { font-size: 32px; color: #ffffff; width: 80px; }
-        .row-icon { font-size: 70px; }
-        .row-pop { font-size: 65px; color: #ffff00; font-family: "Impact", sans-serif; }
-
-        .card-icon { font-size: 150px; line-height: 1; }
-        .card-pop { font-size: 90px; color: #ffff00; font-family: "Impact", sans-serif; }
+        .time-label { font-size: 35px; color: #ffff00; font-family: monospace; }
+        .time-icon { font-size: 90px; line-height: 1; }
+        .time-temp { font-size: 45px; color: #ffffff; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div class="title-group">
-            <div class="title-top">
-                <span class="date" id="dateText">--/--</span>
-                <span class="name" id="backName">--</span>
-            </div>
-            <span class="credit-tag">データ元: 気象庁</span>
+        <div>
+            <span class="date">6/1</span>
+            <span class="name" id="backName">青森</span>
         </div>
-        <div class="temp-container">
-            <span class="temp-area">現在気温</span><span class="temp-display" id="liveTemp">--.-°C</span>
+        <div>
+            <span class="temp-area">現在気温</span>
+            <span class="temp-display">--.-°C</span>
         </div>
     </div>
 
-    <div class="forecast-grid">
-        <div class="day-card">
-            <span class="card-label">今日</span>
-            <div class="today-timeline">
-                <div class="today-row">
-                    <span class="row-label">午前</span>
-                    <span class="row-icon" id="iconAm">・</span>
-                    <span class="row-pop" id="popAm">--%</span>
-                </div>
-                <div class="today-row">
-                    <span class="row-label">午後</span>
-                    <span class="row-icon" id="iconPm">・</span>
-                    <span class="row-pop" id="popPm">--%</span>
-                </div>
-                <div class="today-row">
-                    <span class="row-label">夜間</span>
-                    <span class="row-icon" id="iconNight">・</span>
-                    <span class="row-pop" id="popNight">--%</span>
-                </div>
-            </div>
+    <!-- ここに3時間ごとのデータが横並びで入るイメージです -->
+    <div class="timeline-container">
+        <div class="time-box">
+            <span class="time-label">15:00</span>
+            <span class="time-icon">☀</span>
+            <span class="time-temp">24°C</span>
         </div>
-        
-        <div class="day-card">
-            <span class="card-label">明日</span>
-            <span class="card-icon" id="iconTom">・</span>
-            <span class="card-pop" id="popTom">--%</span>
+        <div class="time-box">
+            <span class="time-label">18:00</span>
+            <span class="time-icon">☁</span>
+            <span class="time-temp">21°C</span>
         </div>
-        
-        <div class="day-card">
-            <span class="card-label">明後日</span>
-            <span class="card-icon" id="iconAftTom">・</span>
-            <span class="card-pop" id="popAftTom">--%</span>
+        <div class="time-box">
+            <span class="time-label">21:00</span>
+            <span class="time-icon">☔</span>
+            <span class="time-temp">18°C</span>
+        </div>
+        <div class="time-box">
+            <span class="time-label">00:00</span>
+            <span class="time-icon">☁</span>
+            <span class="time-temp">16°C</span>
         </div>
     </div>
 
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const areaCode = params.get('area') || '130000';
-        const amedasCode = params.get('amedas') || '44132';
-        const areaName = params.get('name') || '東京';
-
-        document.getElementById('backName').innerText = areaName;
-
-        function getWeatherEmoji(code) {
-            const c = parseInt(code);
-            if (c >= 100 && c < 200) return '☀';
-            if (c >= 200 && c < 300) return '☁';
-            if (c >= 300 && c < 400) return '☔';
-            return '☁';
-        }
-
-        async function initSystem() {
-            const now = new Date();
-            document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
-
-            // 1. 府県天気予報取得
-            try {
-                const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
-                const data = await res.json();
-                
-                const timeSeriesData = data[0].timeSeries;
-                const fSeries = timeSeriesData[0].areas[0];
-                
-                let popAm = '0', popPm = '0', popNight = '0';
-                const popTimes = timeSeriesData[1].timeSeries;
-                const popValues = timeSeriesData[1].areas[0].pops;
-                const todayStr = now.getDate();
-
-                if (popTimes && popValues) {
-                    popTimes.forEach((tStr, idx) => {
-                        const targetDate = new Date(tStr);
-                        if (targetDate.getDate() === todayStr) {
-                            const hr = targetDate.getHours();
-                            if (hr >= 6 && hr < 12)  popAm = popValues[idx];
-                            if (hr >= 12 && hr < 18) popPm = popValues[idx];
-                            if (hr >= 18 && hr < 24) popNight = popValues[idx];
-                        }
-                    });
-                }
-
-                document.getElementById('iconAm').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
-                document.getElementById('iconPm').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
-                document.getElementById('iconNight').innerText = getWeatherEmoji(fSeries.weatherCodes[0]);
-                document.getElementById('popAm').innerText = popAm + '%';
-                document.getElementById('popPm').innerText = popPm + '%';
-                document.getElementById('popNight').innerText = popNight + '%';
-
-                document.getElementById('iconTom').innerText = getWeatherEmoji(fSeries.weatherCodes[1]);
-                let tomPops = [];
-                const tomorrowStr = new Date(Date.now() + 86400000).getDate();
-                if (popTimes && popValues) {
-                    popTimes.forEach((tStr, idx) => {
-                        if (new Date(tStr).getDate() === tomorrowStr) {
-                            tomPops.push(parseInt(popValues[idx] || 0));
-                        }
-                    });
-                }
-                document.getElementById('popTom').innerText = (tomPops.length > 0 ? Math.max(...tomPops) : '0') + '%';
-
-                try {
-                    const weekSeries = data[1].timeSeries[0].areas[0];
-                    document.getElementById('iconAftTom').innerText = getWeatherEmoji(weekSeries.weatherCodes[1]);
-                    document.getElementById('popAftTom').innerText = (data[1].timeSeries[1].areas[0].pops[1] || '0') + '%';
-                } catch(e) {
-                    document.getElementById('iconAftTom').innerText = getWeatherEmoji(fSeries.weatherCodes[2] || '200');
-                    document.getElementById('popAftTom').innerText = '0%';
-                }
-            } catch(e) { console.error(e); }
-
-           // 2. アメダス現在気温取得（UTC 3時間区切り完全修正版）
-            try {
-                const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
-                const rawTime = (await tRes.text()).trim(); 
-                const cleanTime = rawTime.replace(/\D/g, ''); // ここで定義
-                
-                // 取得した気象庁の最新時間（JST）からURL用のUTC時間を計算
-                const year  = cleanTime.substring(0, 4);
-                const month = cleanTime.substring(4, 6);
-                const day   = cleanTime.substring(6, 8);
-                const hour24 = parseInt(cleanTime.substring(8, 10));
-
-                // 日本時間から9時間を引いてUTC（世界標準時）にする
-                const jstDate = new Date(year, parseInt(month)-1, day, hour24);
-                const utcDate = new Date(jstDate.getTime() - (9 * 60 * 60 * 1000));
-                
-                // UTC基準で3時間ごとに繰り上げる（03, 06, 09, 12, 15, 18, 21, 00）
-                const utcHour = utcDate.getHours();
-                let fileHour = "00";
-                if (utcHour >= 0 && utcHour <= 2)   fileHour = "03";
-                else if (utcHour >= 3 && utcHour <= 5)   fileHour = "06";
-                else if (utcHour >= 6 && utcHour <= 8)   fileHour = "09";
-                else if (utcHour >= 9 && utcHour <= 11)  fileHour = "12";
-                else if (utcHour >= 12 && utcHour <= 14) fileHour = "15";
-                else if (utcHour >= 15 && utcHour <= 17) fileHour = "18";
-                else if (utcHour >= 18 && utcHour <= 20) fileHour = "21";
-                else if (utcHour >= 21 && utcHour <= 23) fileHour = "00";
-
-                // ファイル名に使う日付（JSTベースのフォルダ名）
-                const urlDateStr = `${year}${month}${day}`;
-                
-                let amedasData = null;
-                let finalTemp = null;
-
-                // 最新時間の12時間制ファイルをリクエスト
-                try {
-                    const targetUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${hour}.json`;
-                    const amedasRes = await fetch(targetUrl);
-                    if (amedasRes.ok) amedasData = await amedasRes.json();
-                } catch(err) { console.log("最新ファイル未生成のため前時を参照します"); }
-
-                if (amedasData) {
-                    const keys = Object.keys(amedasData).sort();
-                    for (let i = keys.length - 1; i >= 0; i--) {
-                        if (amedasData[keys[i]].temp && amedasData[keys[i]].temp[0] !== null) {
-                            finalTemp = amedasData[keys[i]].temp[0];
-                            break;
-                        }
-                    }
-                }
-
-                // 最新ファイルがない、またはデータがない場合は1時間前をリクエスト
-                if (finalTemp === null) {
-                    try {
-                        const prevHour24 = (hour24 - 1 + 24) % 24;
-                        const prevHour12 = prevHour24 % 12;
-                        const prevHour = String(prevHour12).padStart(2, '0');
-                        
-                        const fallbackUrl = `https://www.jma.go.jp/bosai/amedas/data/point/${amedasCode}/${urlDateStr}_${prevHour}.json`;
-                        const resFb = await fetch(fallbackUrl);
-                        if (resFb.ok) {
-                            const fbJson = await resFb.json();
-                            const keys = Object.keys(fbJson).sort();
-                            for (let i = keys.length - 1; i >= 0; i--) {
-                                if (fbJson[keys[i]].temp && fbJson[keys[i]].temp[0] !== null) {
-                                    finalTemp = fbJson[keys[i]].temp[0];
-                                    break;
-                                }
-                            }
-                        }
-                    } catch(err) { console.error("前時ファイル取得エラー:", err); }
-                }
-
-                document.getElementById('liveTemp').innerText = finalTemp !== null ? finalTemp.toFixed(1) + '°C' : "--.-°C";
-            } catch(e) { 
-                console.error(e); 
-                document.getElementById('liveTemp').innerText = "--.-°C";
-            }
-        }
-
-        initSystem();
-        setInterval(initSystem, 120000);
-    </script>
 </body>
 </html>
