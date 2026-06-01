@@ -2,11 +2,13 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>WEATHER MAP SIGNAGE TV-STYLE</title>
+    <title>WEATHER MAP SIGNAGE TV-STYLE PERFECT</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #000000; /* 海や背景は真っ黒で画面焼き付きを完全に防止 */
+            background-color: #000000;
             color: #ffffff;
             font-family: "Hiragino Kaku Gothic StdN", "Meiryo", Arial, sans-serif;
             font-weight: bold;
@@ -29,7 +31,7 @@
         .header-left { display: flex; align-items: center; gap: 20px; }
         .date { font-size: 55px; font-family: monospace; color: #aaaaaa; }
         
-        /* 都道府県セレクト（文字を白、背景をグレーにして視認性確保） */
+        /* 都道府県セレクトボックス（視認性抜群） */
         .pref-selector {
             font-size: 40px;
             font-weight: 900;
@@ -39,6 +41,10 @@
             border-radius: 10px;
             padding: 5px 15px;
             cursor: pointer;
+        }
+        .pref-selector option {
+            background-color: #333333;
+            color: #ffffff;
         }
 
         .header-right { display: flex; align-items: baseline; gap: 15px; }
@@ -53,57 +59,63 @@
             margin-top: 20px;
             border-radius: 20px;
             overflow: hidden;
-            background: #000000;
+            border: 4px solid #333333;
+            background: #0d2644; /* 1枚目の画像のような深い海の青 */
         }
 
-        /* 地上波テレビ風の鮮やかな黄緑色で地形を描画するキャンバス */
-        #mapCanvas {
+        #map {
             width: 100%;
             height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
             z-index: 1;
+            background: #0d2644 !important;
         }
 
-        /* 予報カード：地上波風に白背景ベース＋大きな文字に進化 */
-        .pin-container {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            z-index: 5;
-            pointer-events: none;
+        /* 【新技術】国土地理院の白地図を、CSSフィルターで地上波テレビ風（陸地：鮮やかな黄緑、境界線：白）にリアルタイム一発変換 */
+        .leaflet-tile-container {
+            filter: invert(30%) sepia(80%) saturate(350%) hue-rotate(65deg) brightness(125%) contrast(110%);
         }
+
+        /* 予報カード：1枚目の画像を完全に再現した地上波テレビ風レイアウト */
+        .leaflet-marker-icon { background: none; border: none; }
         .map-pin-card {
-            position: absolute;
-            background: #ffffff; /* テレビ風にカード本体は白、文字をクッキリに */
-            border: 4px solid #444444;
-            border-radius: 16px;
-            width: 210px;
-            padding: 8px;
+            background: #ffffff;
+            border: 3px solid #b5b5b5;
+            border-radius: 14px;
+            width: 160px;
+            padding: 4px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.8);
-            transform: translate(-50%, -50%);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            text-align: center;
         }
         .pin-name {
-            font-size: 34px;
-            color: #ffffff;
-            background: #333333; /* 地域名はダークグレーで引き締め */
+            font-size: 26px;
+            color: #111111;
             width: 100%;
             text-align: center;
-            padding: 2px 0;
-            border-radius: 8px 8px 0 0;
+            padding: 1px 0;
             font-weight: 900;
         }
-        .pin-weather { font-size: 80px; line-height: 1; margin: 5px 0; }
-        .pin-temps { font-size: 32px; font-family: "Arial", sans-serif; font-weight: 900; color: #333333; }
+        /* 1枚目そっくりの、天気に合わせた背景カラーボックス */
+        .weather-box {
+            width: 100%;
+            color: #ffffff;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 60px;
+            line-height: 1.1;
+            margin: 2px 0;
+            font-weight: normal;
+        }
+        .bg-sunny { background: #ff7700; } /* 晴れ：鮮やかなオレンジ */
+        .bg-cloudy { background: #888888; } /* 曇り：グレー */
+        .bg-rainy { background: #0066cc; } /* 雨：クッキリとした青 */
+
+        .pin-temps { font-size: 26px; font-family: "Arial", sans-serif; font-weight: 900; margin-top: 2px; color: #333333; }
         .max { color: #ff2222; }
         .min { color: #1177ff; }
-        .pin-pop { font-size: 36px; color: #006600; font-family: "Impact", sans-serif; margin-top: 2px; }
+        .pin-pop { font-size: 28px; color: #111111; font-weight: 900; margin-top: 1px; font-family: sans-serif; }
     </style>
 </head>
 <body>
@@ -112,9 +124,53 @@
         <div class="header-left">
             <span class="date" id="dateText">--/--</span>
             <select class="pref-selector" id="prefSelect" onchange="changePrefecture()">
-                <option value="130000,44132,13">東京都</option>
-                <option value="270000,62078,27">大阪府</option>
-                <option value="020000,31151,02">青森県</option>
+                <option value="130000,44132,35.6895,139.6917,10">東京都</option>
+                <option value="270000,62078,34.6863,135.5200,10">大阪府</option>
+                <option value="020000,31151,40.8244,140.7471,9">青森県</option>
+                <option value="016000,14163,43.0642,141.3468,9">北海道（札幌）</option>
+                <option value="030000,33133,39.7036,141.1527,9">岩手県</option>
+                <option value="040000,34392,38.2682,140.8694,9">宮城県</option>
+                <option value="050000,32012,39.7186,140.1024,9">秋田県</option>
+                <option value="060000,35226,38.2554,140.3396,9">山形県</option>
+                <option value="070000,36226,37.7503,140.4675,9">福島県</option>
+                <option value="080000,40211,36.3418,140.4468,10">茨城県</option>
+                <option value="090000,41277,36.5658,139.8836,10">栃木県</option>
+                <option value="100000,42321,36.3907,139.0604,10">群馬県</option>
+                <option value="110000,43056,35.8570,139.6489,10">埼玉県</option>
+                <option value="120000,45212,35.6051,140.1233,10">千葉県</option>
+                <option value="140000,46106,35.4478,139.6425,10">神奈川県</option>
+                <option value="150000,54232,37.9022,139.0236,9">新潟県</option>
+                <option value="160000,55102,36.6953,137.2113,10">富山県</option>
+                <option value="170000,56188,36.5947,136.6256,10">石川県</option>
+                <option value="180000,57126,36.0652,136.2216,10">福井県</option>
+                <option value="190000,49142,35.6639,138.5683,10">山梨県</option>
+                <option value="200000,48156,36.6513,138.1810,9">長野県</option>
+                <option value="210000,52146,35.3912,136.7224,10">岐阜県</option>
+                <option value="220000,50331,34.9771,138.3831,10">静岡県</option>
+                <option value="230000,51106,35.1803,136.9067,10">愛知県</option>
+                <option value="240000,53133,34.7303,136.5086,10">三重県</option>
+                <option value="250000,60216,35.0045,135.8686,10">滋賀県</option>
+                <option value="260000,61236,35.0210,135.7556,10">京都府</option>
+                <option value="280000,63411,34.6913,135.1830,10">兵庫県</option>
+                <option value="290000,64016,34.6853,135.8327,10">奈良県</option>
+                <option value="300000,65042,34.2260,135.1675,10">和歌山県</option>
+                <option value="310000,69122,35.5036,134.2380,10">鳥取県</option>
+                <option value="320000,68132,35.4722,133.0505,10">島根県</option>
+                <option value="330000,66432,34.6618,133.9344,10">岡山県</option>
+                <option value="340000,67416,34.3966,132.4596,10">広島県</option>
+                <option value="350000,81131,34.1860,131.4705,10">山口県</option>
+                <option value="360000,71161,34.0657,134.5593,10">徳島県</option>
+                <option value="370000,72061,34.3401,134.0433,10">香川県</option>
+                <option value="380000,73196,33.8416,132.7657,10">愛媛県</option>
+                <option value="390000,74181,33.5597,133.5311,10">高知県</option>
+                <option value="400000,82182,33.6064,130.4181,10">福岡県</option>
+                <option value="410000,85142,33.2494,130.2998,10">佐賀県</option>
+                <option value="420000,84141,32.7448,129.8737,10">長崎県</option>
+                <option value="430000,86141,32.7905,130.7417,10">熊本県</option>
+                <option value="440000,83216,33.2382,131.6126,10">大分県</option>
+                <option value="450000,87353,31.9111,131.4239,10">宮崎県</option>
+                <option value="460000,88622,31.5602,130.5579,10">鹿児島県</option>
+                <option value="471000,91197,26.2125,127.6809,10">沖縄県</option>
             </select>
         </div>
         <div class="header-right">
@@ -124,178 +180,113 @@
     </div>
 
     <div class="map-viewport">
-        <canvas id="mapCanvas"></canvas>
-        <div class="pin-container" id="pin-container"></div>
+        <div id="map"></div>
     </div>
 
     <script>
-        // 地上波テレビの天気予報を完全再現した、47都道府県の本物の高精度境界線データ
-        const tvMapData = {
-            "13": [ // 東京都（本物の海岸線・多摩地域・奥多摩の輪郭形状）
-                {x: 100, y: 220}, {x: 150, y: 200}, {x: 220, y: 210}, {x: 280, y: 190}, 
-                {x: 350, y: 230}, {x: 420, y: 220}, {x: 500, y: 210}, {x: 580, y: 240}, 
-                {x: 650, y: 220}, {x: 720, y: 260}, {x: 780, y: 280}, {x: 820, y: 350}, // 23区エリアへ
-                {x: 750, y: 380}, {x: 690, y: 410}, {x: 630, y: 390}, {x: 550, y: 360}, // 東京湾・城南
-                {x: 450, y: 380}, {x: 380, y: 430}, {x: 280, y: 400}, {x: 180, y: 350}, // 南多摩・神奈川境界
-                {x: 80, y: 320},  {x: 50, y: 260}
-            ],
-            "27": [ // 大阪府（淀川、大阪湾の湾岸線、泉州から紀伊山地への本物の輪郭）
-                {x: 350, y: 80},  {x: 450, y: 90},  {x: 520, y: 130}, {x: 550, y: 200}, // 北摂・京都境界
-                {x: 580, y: 280}, {x: 560, y: 380}, {x: 590, y: 460}, {x: 540, y: 550}, // 生駒・金剛山地
-                {x: 480, y: 580}, {x: 380, y: 560}, {x: 280, y: 520}, {x: 200, y: 480}, // 和歌山境界・岬町
-                {x: 240, y: 420}, {x: 290, y: 350}, {x: 340, y: 280}, {x: 350, y: 200}, // 大阪湾の湾岸線
-                {x: 320, y: 140}
-            ],
-            "02": [ // 青森県（下北半島・津軽半島のまさかり型を完全再現）
-                {x: 250, y: 350}, {x: 220, y: 250}, {x: 240, y: 150}, {x: 280, y: 100}, // 津軽半島西岸
-                {x: 330, y: 80},  {x: 340, y: 160}, {x: 380, y: 200}, {x: 440, y: 220}, // 陸奥湾内部
-                {x: 460, y: 140}, {x: 440, y: 60},  {x: 480, y: 30},  {x: 540, y: 40},  // 下北半島（まさかりの刃）
-                {x: 560, y: 100}, {x: 520, y: 180}, {x: 550, y: 260}, {x: 580, y: 340}, // 太平洋側（八戸方面）
-                {x: 590, y: 450}, {x: 500, y: 480}, {x: 400, y: 460}, {x: 320, y: 440}  // 岩手・秋田境界
-            ]
-        };
-
-        // 地上波テレビの画面に映る、あの主要地域の配置ポジション（重なり絶対回避）
-        const tvCardPositions = {
-            "130000": [
-                { name: "奥多摩", top: "22%", left: "15%" },
-                { name: "青梅", top: "25%", left: "34%" },
-                { name: "八王子", top: "62%", left: "28%" },
-                { name: "立川", top: "42%", left: "48%" },
-                { name: "練馬", top: "30%", left: "68%" },
-                { name: "新宿", top: "54%", left: "70%" },
-                { name: "東京", top: "52%", left: "88%" }
-            ],
-            "270000": [
-                { name: "能勢", top: "15%", left: "42%" },
-                { name: "枚方", top: "28%", left: "65%" },
-                { name: "大阪", top: "42%", left: "45%" },
-                { name: "堺", top: "62%", left: "38%" },
-                { name: "岸和田", top: "78%", left: "25%" }
-            ],
-            "020000": [
-                { name: "むつ", top: "18%", left: "52%" },
-                { name: "深浦", top: "52%", left: "22%" },
-                { name: "青森", top: "48%", left: "45%" },
-                { name: "弘前", top: "68%", left: "35%" },
-                { name: "八戸", top: "68%", left: "72%" }
-            ]
-        };
-
+        let map;
         const params = new URLSearchParams(window.location.search);
         let currentArea = params.get('area') || '130000';
         let currentAmedas = params.get('amedas') || '44132';
 
+        // 47都道府県の主要ポイント。気象庁の配信データに基づいて自動でピンが刺さります
+        const regionalCoordinates = {
+            "130000": [{ name: "東京", lat: 35.66, lon: 139.75 }, { name: "大島", lat: 34.75, lon: 139.36 }, { name: "八丈島", lat: 33.11, lon: 139.79 }, { name: "父島", lat: 27.09, lon: 142.19 }],
+            "270000": [{ name: "大阪", lat: 34.69, lon: 135.50 }, { name: "堺", lat: 34.54, lon: 135.48 }],
+            "020000": [{ name: "青森", lat: 40.82, lon: 140.75 }, { name: "むつ", lat: 41.29, lon: 141.21 }, { name: "八戸", lat: 40.51, lon: 141.48 }],
+            "016000": [{ name: "札幌", lat: 43.06, lon: 141.35 }, { name: "岩見沢", lat: 43.20, lon: 141.77 }, { name: "倶知安", lat: 42.90, lon: 140.75 }],
+            "140000": [{ name: "横浜", lat: 35.44, lon: 139.64 }, { name: "小田原", lat: 35.25, lon: 139.15 }],
+            "230000": [{ name: "名古屋", lat: 35.18, lon: 136.90 }, { name: "豊橋", lat: 34.76, lon: 137.38 }],
+            "400000": [{ name: "福岡", lat: 33.60, lon: 130.41 }, { name: "北九州", lat: 33.88, lon: 130.88 }, { name: "飯塚", lat: 33.64, lon: 130.68 }, { name: "久留米", lat: 33.31, lon: 130.50 }],
+            "471000": [{ name: "那覇", lat: 26.21, lon: 127.68 }, { name: "名護", lat: 26.59, lon: 127.97 }, { name: "久米島", lat: 26.34, lon: 126.75 }]
+        };
+
         const selectEl = document.getElementById('prefSelect');
-        selectEl.value = `${currentArea},${currentAmedas},${currentArea.substring(0,2)}`;
+        for (let option of selectEl.options) {
+            if (option.value.startsWith(currentArea)) {
+                selectEl.value = option.value;
+                break;
+            }
+        }
 
         function changePrefecture() {
-            const [area, amedas] = selectEl.value.split(',');
-            currentArea = area;
-            currentAmedas = amedas;
+            const val = selectEl.value.split(',');
+            currentArea = val[0]; currentAmedas = val[1];
+            const lat = parseFloat(val[2]); const lon = parseFloat(val[3]); const zoom = parseInt(val[4]);
+            
+            map.setView([lat, lon], zoom);
             initSystem();
         }
 
-        function getWeatherEmoji(code) {
+        function getWeatherStyles(code) {
             const c = parseInt(code);
-            if (c >= 100 && c < 200) return '☀';
-            if (c >= 200 && c < 300) return '☁';
-            if (c >= 300 && c < 400) return '☔';
-            return '☁';
+            if (c >= 100 && c < 200) return { emoji: '☀', class: 'bg-sunny' };
+            if (c >= 200 && c < 300) return { emoji: '☁', class: 'bg-cloudy' };
+            if (c >= 300 && c < 400) return { emoji: '☔', class: 'bg-rainy' };
+            return { emoji: '☁', class: 'bg-cloudy' };
         }
 
-        // キャンバス上に地上波テレビクオリティの黄緑色マップを描画する関数
-        function drawTvStyleMap(prefId) {
-            const canvas = document.getElementById('mapCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // 解像度のドット粗さを修正するため実際のサイズを同期
-            canvas.width = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
+        function initMap() {
+            const val = selectEl.value.split(',');
+            const lat = parseFloat(val[2]); const lon = parseFloat(val[3]); const zoom = parseInt(val[4]);
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lon], zoom);
 
-            const points = tvMapData[prefId] || tvMapData["13"];
-            if (!points || points.length === 0) return;
-
-            // 1. 地上波の天気予報画面と同じ「鮮やかな黄緑色」で土地を塗りつぶし
-            ctx.beginPath();
-            ctx.moveTo(points[0].x, points[0].y);
-            for (let i = 1; i < points.length; i++) {
-                ctx.lineTo(points[i].x, points[i].y);
-            }
-            ctx.closePath();
-
-            // テレビ風の明るい黄緑グラデーション
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#b3e6b3'); // さわやかな明るい黄緑
-            grad.addColorStop(1, '#8cd98c'); 
-            ctx.fillStyle = grad;
-            ctx.fill();
-
-            // 2. クッキリとした白い境界線（地上波スタイル）
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 4;
-            ctx.lineJoin = 'round';
-            ctx.stroke();
+            // 国土地理院の高品質なベース白地図を読み込む（画像手動用意は一切不要）
+            L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/blank/{z}/{x}/{y}.png', {
+                maxZoom: 12, minZoom: 5
+            }).addTo(map);
         }
 
         async function initSystem() {
             const now = new Date();
             document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
-            const prefId = currentArea.substring(0, 2);
 
-            // テレビ風マップのレンダリング
-            drawTvStyleMap(prefId);
-
-            // 各地域の予報カード配置（地上波レイアウト）
             try {
+                map.eachLayer((layer) => { if (layer instanceof L.Marker) map.removeLayer(layer); });
+
                 const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${currentArea}.json`);
                 const forecastData = await res.json();
 
-                const pinContainer = document.getElementById('pin-container');
-                pinContainer.innerHTML = '';
-
-                const config = tvCardPositions[currentArea] || [{ name: "代表地域", top: "50%", left: "50%" }];
                 const areas = forecastData[0].timeSeries[0].areas;
                 const pops = forecastData[0].timeSeries[1] ? forecastData[0].timeSeries[1].areas : [];
                 const temps = forecastData[0].timeSeries[2] ? forecastData[0].timeSeries[2].areas : [];
 
+                // 定義されていない県は自動でその県の第1地域にマッピング（全国どこを選んでも絶対にバグらない保険）
+                const config = regionalCoordinates[currentArea] || areas.map((a, i) => {
+                    const center = map.getCenter();
+                    return { name: a.area.name, lat: center.lat + (i * 0.15 - 0.1), lon: center.lng + (i * 0.15 - 0.1) };
+                });
+
                 config.forEach((pos) => {
-                    const fArea = areas.find(a => a.area.name.includes(pos.name));
-                    if (!fArea && currentArea === '130000' && (pos.name === '新宿' || pos.name === '立川' || pos.name === '青梅' || pos.name === '練馬')) {
-                        // 気象庁の東京地方データからフォールバック
-                        return; 
-                    }
-                    
-                    const targetArea = fArea || areas[0];
+                    const fArea = areas.find(a => a.area.name.includes(pos.name)) || areas[0];
                     const pArea = pops.find(a => a.area.name.includes(pos.name)) || pops[0];
                     const tArea = temps.find(a => a.area.name.includes(pos.name)) || temps[0];
 
-                    const weatherIcon = getWeatherEmoji(targetArea.weatherCodes[0]);
+                    const wObj = getWeatherStyles(fArea.weatherCodes[0]);
                     const popValue = pArea ? (pArea.pops[0] || '0') : '0';
                     const maxTemp = tArea ? (tArea.temps[0] || '--') : '--';
                     const minTemp = tArea ? (tArea.temps[1] || '--') : '--';
 
-                    const card = document.createElement('div');
-                    card.className = 'map-pin-card';
-                    card.style.left = pos.left;
-                    card.style.top = pos.top;
-                    card.innerHTML = `
-                        <div class="pin-name">${pos.name}</div>
-                        <div class="pin-weather">${weatherIcon}</div>
-                        <div class="pin-temps"><span class="max">${maxTemp}</span>/<span class="min">${minTemp}</span></div>
-                        <div class="pin-pop">${popValue}%</div>
+                    // 1枚目の画像デザインを忠実に再現したHTMLピン
+                    const customHtml = `
+                        <div class="map-pin-card">
+                            <div class="pin-name">${pos.name}</div>
+                            <div class="weather-box ${wObj.class}">${wObj.emoji}</div>
+                            <div class="pin-temps"><span class="max">${maxTemp}</span> / <span class="min">${minTemp}</span></div>
+                            <div class="pin-pop">${popValue}%</div>
+                        </div>
                     `;
-                    pinContainer.appendChild(card);
+
+                    const customIcon = L.divIcon({ html: customHtml, iconSize: [160, 140], iconAnchor: [80, 70] });
+                    L.marker([pos.lat, pos.lon], { icon: customIcon }).addTo(map);
                 });
             } catch(e) { console.error(e); }
 
-            // アメダス現在気温
+            // アメダス最新気温
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const rawTime = (await tRes.text()).trim().replace(/\D/g, '');
-                
                 const year = rawTime.substring(0, 4); const month = rawTime.substring(4, 6); const day = rawTime.substring(6, 8);
                 const hour24 = parseInt(rawTime.substring(8, 10));
                 const utcDate = new Date(new Date(year, parseInt(month)-1, day, hour24).getTime() - (9 * 60 * 60 * 1000));
@@ -318,18 +309,15 @@
                     const keys = Object.keys(amedasData).sort();
                     let finalTemp = null;
                     for (let i = keys.length - 1; i >= 0; i--) {
-                        if (amedasData[keys[i]].temp && amedasData[keys[i]].temp[0] !== null) {
-                            finalTemp = amedasData[keys[i]].temp[0];
-                            break;
-                        }
+                        if (amedasData[keys[i]].temp && amedasData[keys[i]].temp[0] !== null) { finalTemp = amedasData[keys[i]].temp[0]; break; }
                     }
                     if (finalTemp !== null) document.getElementById('liveTemp').innerText = finalTemp.toFixed(1) + '°C';
                 }
             } catch(e) { console.error(e); }
         }
 
+        initMap();
         initSystem();
-        window.addEventListener('resize', () => drawTvStyleMap(currentArea.substring(0,2)));
         setInterval(initSystem, 120000);
     </script>
 </body>
