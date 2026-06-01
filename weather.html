@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>WEATHER MAP SIGNAGE</title>
+    <title>WEATHER MAP SIGNAGE PERFECT</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -36,34 +36,75 @@
             width: 100%;
             height: calc(100vh - 200px);
             margin-top: 20px;
-            background: #050505;
+            background: #020502; /* 漆黒に近い緑 */
             border-radius: 20px;
             overflow: hidden;
+            border: 2px solid #112211;
         }
 
-        /* 背景のSVG日本地図 */
-        #map-svg {
+        /* -------------------------------------------------------------
+           【新実装】CSSアートによる都道府県の地形シルエット
+           外部画像を使わず、画面焼き付きを防ぐ暗い緑色（#1a3a1a）で地形を描画
+        ------------------------------------------------------------- */
+        .map-base-container {
+            position: absolute;
             width: 100%;
             height: 100%;
-            position: absolute;
             top: 0;
             left: 0;
-        }
-        .land {
-            fill: #112211; /* 画面が焼けない暗い緑 */
-            stroke: #224422; /* 境界線 */
-            stroke-width: 0.2;
-        }
-        .active-pref {
-            fill: #1a3a1a; /* 選択された県を少し明るく */
-            stroke: #448844;
-            stroke-width: 0.4;
+            z-index: 1;
         }
 
-        /* ピン留め予報カード（半透明・白枠） */
+        /* 本州・多摩地域の巨大な横長の地形 */
+        .geo-mainland {
+            position: absolute;
+            top: 20%;
+            left: 5%;
+            width: 75%;
+            height: 55%;
+            background: #152a15;
+            border: 3px solid #224422;
+            /* 西側（奥多摩）が太く、東（23区）に向かって細く尖る東京の形を擬似再現 */
+            border-radius: 40% 80% 20% 50% / 60% 40% 50% 40%;
+        }
+
+        /* 東京湾・城南エリアの張り出し */
+        .geo-bay-side {
+            position: absolute;
+            top: 45%;
+            left: 65%;
+            width: 25%;
+            height: 35%;
+            background: #152a15;
+            border: 3px solid #224422;
+            border-radius: 50% 30% 70% 40%;
+        }
+
+        /* 伊豆諸島・海側のライン（下部の青い海との境界を意識） */
+        .geo-ocean-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 15%;
+            background: linear-gradient(to top, #001133 0%, transparent 100%); /* 下部をうっすら紺色に */
+            opacity: 0.5;
+        }
+
+        /* ------------------------------------------------------------- */
+
+        /* ピン留め予報カード（半透明・白枠・文字爆大） */
+        .pin-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 5;
+        }
         .map-pin-card {
             position: absolute;
-            background: rgba(10, 10, 10, 0.85);
+            background: rgba(10, 10, 10, 0.92); /* 後ろの緑地図が透ける半透明黒 */
             border: 4px solid #ffffff;
             border-radius: 12px;
             width: 220px;
@@ -71,10 +112,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.9);
-            transform: translate(-50%, -50%); /* 中心をピン位置に合わせる */
-            transition: all 0.5s ease;
-            opacity: 0; /* データ読み込み前は非表示 */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
         }
         .card-show { opacity: 1; }
 
@@ -109,10 +150,13 @@
     </div>
 
     <div class="map-viewport" id="viewport">
-        <svg id="map-svg" viewBox="120 20 35 30">
-            <path class="land" d="M140,35 L141,36 L142,35 L141,34 Z" id="pref-13"></path>
-            </svg>
-        <div id="pin-container"></div>
+        <div class="map-base-container" id="mapBase">
+            <div class="geo-mainland"></div>
+            <div class="geo-bay-side"></div>
+            <div class="geo-ocean-line"></div>
+        </div>
+
+        <div class="pin-container" id="pin-container"></div>
     </div>
 
     <script>
@@ -123,16 +167,16 @@
 
         document.getElementById('backName').innerText = areaName;
 
-        // 都道府県ごとの主要都市マッピング座標（画面内の％位置）
+        // 地図上のピン位置（地形シルエットに合わせた％配置）
         const regionalPositions = {
-            "130000": [ // 東京都の主要部
-                { name: "東京", top: "50%", left: "80%" },
-                { name: "新宿", top: "45%", left: "68%" },
-                { name: "立川", top: "40%", left: "50%" },
-                { name: "八王子", top: "58%", left: "35%" },
-                { name: "奥多摩", top: "25%", left: "15%" }
+            "130000": [
+                { name: "東京", top: "48%", left: "82%" },
+                { name: "新宿", top: "42%", left: "68%" },
+                { name: "立川", top: "38%", left: "48%" },
+                { name: "八王子", top: "58%", left: "32%" },
+                { name: "奥多摩", top: "30%", left: "12%" }
             ],
-            "020000": [ // 青森県の主要部
+            "020000": [
                 { name: "青森", top: "35%", left: "50%" },
                 { name: "弘前", top: "55%", left: "35%" },
                 { name: "八戸", top: "65%", left: "75%" },
@@ -152,24 +196,30 @@
             const now = new Date();
             document.getElementById('dateText').innerText = `${now.getMonth()+1}/${now.getDate()}`;
 
-            // 1. 県内一括天気予報の取得＆地図マッピング
+            // 青森県が選ばれたら、地形の形を縦長（ノコギリ状）に動的変化させる
+            const mapBase = document.getElementById('mapBase');
+            if (areaCode === "020000") {
+                mapBase.innerHTML = `
+                    <div style="position:absolute; top:15%; left:25%; width:50%; height:70%; background:#152a15; border:3px solid #224422; border-radius:30% 40% 40% 30%;"></div>
+                    <div style="position:absolute; top:10%; left:50%; width:25%; height:30%; background:#152a15; border:3px solid #224422; border-radius:50%;"></div>
+                `;
+            }
+
+            // 1. 天気予報データ取得＆マッピング
             try {
                 const res = await fetch(`https://www.jma.go.jp/bosai/forecast/data/forecast/${areaCode}.json`);
                 const data = await res.json();
                 
                 const pinContainer = document.getElementById('pin-container');
-                pinContainer.innerHTML = ''; // クリア
+                pinContainer.innerHTML = '';
 
-                // 選択された地域設定を読み込み
                 const config = regionalPositions[areaCode] || [{ name: areaName, top: "50%", left: "50%" }];
                 
-                // 府県予報から各サブ地域のデータを抽出
                 const areas = data[0].timeSeries[0].areas;
                 const pops = data[0].timeSeries[1] ? data[0].timeSeries[1].areas : [];
                 const temps = data[0].timeSeries[2] ? data[0].timeSeries[2].areas : [];
 
-                config.forEach((pos, index) => {
-                    // 最も名前が近い予報データを検索
+                config.forEach((pos) => {
                     const fArea = areas.find(a => a.area.name.includes(pos.name)) || areas[0];
                     const pArea = pops.find(a => a.area.name.includes(pos.name)) || pops[0];
                     const tArea = temps.find(a => a.area.name.includes(pos.name)) || temps[0];
@@ -179,7 +229,6 @@
                     const maxTemp = tArea ? (tArea.temps[0] || '--') : '--';
                     const minTemp = tArea ? (tArea.temps[1] || '--') : '--';
 
-                    // 画像のデザインを完全再現したカードを動的生成
                     const card = document.createElement('div');
                     card.className = 'map-pin-card card-show';
                     card.style.top = pos.top;
@@ -192,10 +241,9 @@
                     `;
                     pinContainer.appendChild(card);
                 });
+            } catch(e) { console.error(e); }
 
-            } catch(e) { console.error("予報マップ生成エラー:", e); }
-
-            // 2. アメダス現在気温取得（UTC 3時間区切りバグ完全修正版）
+            // 2. アメダス現在気温取得
             try {
                 const tRes = await fetch(`https://www.jma.go.jp/bosai/amedas/data/latest_time.txt`);
                 const rawTime = (await tRes.text()).trim(); 
@@ -238,11 +286,11 @@
                         document.getElementById('liveTemp').innerText = finalTemp.toFixed(1) + '°C';
                     }
                 }
-            } catch(e) { console.error("アメダス取得エラー:", e); }
+            } catch(e) { console.error(e); }
         }
 
         initSystem();
-        setInterval(initSystem, 120000); // 2分毎更新
+        setInterval(initSystem, 120000);
     </script>
 </body>
 </html>
